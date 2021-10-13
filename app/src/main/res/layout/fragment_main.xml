@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/Theme.ClickerAndroid"
+    app:cardCornerRadius="10dp"
+    app:contentPadding="5dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.MainFragment">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/chooseLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/closeButton">
+
+            <AutoCompleteTextView
+                android:id="@+id/script"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:editable="false"
+                android:inputType="none"
+                android:maxEms="10"
+                android:padding="2dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                tools:ignore="Deprecated,LabelFor,SmallSp,SpeakableTextPresentCheck,TextContrastCheck"
+                tools:text="Market" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/closeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/transparent"
+            android:padding="0dp"
+            android:src="@android:drawable/btn_dialog"
+            app:layout_constraintEnd_toEndOf="@id/stopButton"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/startButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/holo_green_dark"
+            android:text="@string/start"
+            android:textColor="?attr/colorOnBackground"
+            app:layout_constraintEnd_toStartOf="@id/stopButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chooseLayout"
+            tools:ignore="TextContrastCheck" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/stopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:text="@string/stop"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/startButton"
+            app:layout_constraintTop_toBottomOf="@id/chooseLayout" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logButton"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/log"
+            app:layout_constraintEnd_toStartOf="@id/editorButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/startButton" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editorButton"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/logButton"
+            app:layout_constraintTop_toBottomOf="@id/stopButton" />
+
+        <GridLayout
+            android:id="@+id/editorLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="3"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/editorButton">
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="@string/data" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="@string/current" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="@string/saved" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="X"
+                tools:ignore="HardcodedText" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/currentX"
+                style="@style/GridDataStyle"
+                tools:text="555" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/savedX"
+                style="@style/GridDataStyle"
+                tools:text="333" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="Y"
+                tools:ignore="HardcodedText" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/currentY"
+                style="@style/GridDataStyle"
+                tools:text="777" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/savedY"
+                style="@style/GridDataStyle"
+                tools:text="666" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/GridDataStyle"
+                android:text="@string/color" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/currentColor"
+                style="@style/GridDataStyle"
+                tools:text="342523456" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/savedColor"
+                style="@style/GridDataStyle"
+                tools:text="134554677" />
+        </GridLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/logScrollView"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/editorButton"
+            tools:ignore="SpeakableTextPresentCheck">
+
+            <LinearLayout
+                android:id="@+id/logView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
