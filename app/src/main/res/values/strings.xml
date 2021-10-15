@@ -7,7 +7,4 @@
     <string name="accessibility_service_label">ClickerService</string>
     <string name="accessibility_service_description">Service for Clicker</string>
     <string name="color">Color</string>
-    <string name="saved">Saved</string>
-    <string name="current">Current</string>
-    <string name="data">Data</string>
 </resources>

@@ -2,7 +2,6 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/Theme.ClickerAndroid"
@@ -96,7 +95,7 @@
             android:id="@+id/editorLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:columnCount="3"
+            android:columnCount="2"
             android:orientation="horizontal"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
@@ -105,25 +104,8 @@
 
             <com.google.android.material.button.MaterialButton
                 style="@style/GridDataStyle"
-                android:text="@string/data" />
-
-            <com.google.android.material.button.MaterialButton
-                style="@style/GridDataStyle"
-                android:text="@string/current" />
-
-            <com.google.android.material.button.MaterialButton
-                style="@style/GridDataStyle"
-                android:text="@string/saved" />
-
-            <com.google.android.material.button.MaterialButton
-                style="@style/GridDataStyle"
                 android:text="X"
                 tools:ignore="HardcodedText" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/currentX"
-                style="@style/GridDataStyle"
-                tools:text="555" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedX"
@@ -136,23 +118,14 @@
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/currentY"
-                style="@style/GridDataStyle"
-                tools:text="777" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedY"
                 style="@style/GridDataStyle"
                 tools:text="666" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/colorLabel"
                 style="@style/GridDataStyle"
                 android:text="@string/color" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/currentColor"
-                style="@style/GridDataStyle"
-                tools:text="342523456" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedColor"

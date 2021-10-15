@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.IBinder
+import android.util.Log
 import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -19,6 +20,9 @@ import com.posse.android.clicker.databinding.LogItemBinding
 import com.posse.android.clicker.model.MyLog
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.schedulers.Schedulers
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 import kotlin.math.abs
 import kotlin.system.exitProcess
 
@@ -55,6 +59,41 @@ class MainFragment : Service() {
         initMenu()
         initButtons()
         initFloatingWindow()
+
+        readInput()
+
+    }
+
+    private fun readInput() {
+        Thread {
+            try {
+                val process =
+                    Runtime.getRuntime().exec(arrayOf("su", "-c", "getevent -t /dev/input/event2"))
+                val input = InputStreamReader(process.inputStream)
+                var s: String? = ""
+                val br = BufferedReader(input)
+                val xPrefix = "0003 0035 "
+                val yPrefix = "0003 0036 "
+                val end = "0003 0039 ffffffff"
+                var lastX = ""
+                var lastY = ""
+                while ((s != null) && Thread.currentThread().isAlive) {
+                    s = br.readLine()
+                    if (s.contains(xPrefix)) lastX = s
+                    if (s.contains(yPrefix)) lastY = s
+                    if (s.contains(end)){
+                        Log.d("touch", "X: ${lastX.substringAfterLast(xPrefix).toLong(16)}")
+                        Log.d("touch", "Y: ${lastY.substringAfterLast(yPrefix).toLong(16)}")
+                        Log.d("touch", "========================")
+                    }
+//                    Log.d("touch", s)
+                }
+                input.close()
+                process.destroy()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }.start()
     }
 
     private fun initButtons() {

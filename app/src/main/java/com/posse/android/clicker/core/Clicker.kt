@@ -31,6 +31,7 @@ class Clicker(view: View) {
     fun stop() {
         scriptThread?.interrupt()
         stopTelegram()
+        animator.stop()
     }
 
     fun click(x: Int, y: Int) {
@@ -40,8 +41,15 @@ class Clicker(view: View) {
         }, Animator.ANIMATION_DURATION)
     }
 
-    fun drag(startX: Int, startY: Int, endX: Int, endY: Int, duration: Long) {
-        animator.animateDrag(startX, startY, endX, endY, duration)
+    fun drag(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        duration: Long,
+        useLongClick: Boolean
+    ) {
+        animator.animateDrag(startX, startY, endX, endY, duration, useLongClick)
         Handler(Looper.getMainLooper()).postDelayed({
             dispatchGestureToService(
                 makeGesture(
@@ -50,7 +58,8 @@ class Clicker(view: View) {
                         startY,
                         endX,
                         endY,
-                        duration
+                        duration,
+                        useLongClick
                     )
                 )
             )
@@ -98,7 +107,7 @@ class Clicker(view: View) {
             }
             is Gesture.Drag -> {
                 willContinue = true
-                duration = LONG_CLICK.toInt()
+                duration = if (gesture.useLongClick) LONG_CLICK.toInt() else CLICK_DURATION
                 dragDuration = gesture.duration
                 dragPath.moveTo(gesture.startX.toFloat(), gesture.startY.toFloat())
                 dragPath.lineTo(gesture.endX.toFloat(), gesture.endY.toFloat())
@@ -142,6 +151,7 @@ sealed class Gesture {
         val startY: Int,
         val endX: Int,
         val endY: Int,
-        val duration: Long
+        val duration: Long,
+        val useLongClick: Boolean
     ) : Gesture()
 }

@@ -13,6 +13,10 @@ import com.posse.android.clicker.core.Clicker
 
 class Animator(private val rootView: View) {
 
+    private val windows = arrayListOf<PopupWindow>()
+
+    private var isInterrupted = false
+
     private fun getCircle(): Drawable {
         val drawable = GradientDrawable()
         drawable.shape = GradientDrawable.OVAL
@@ -34,13 +38,20 @@ class Animator(private val rootView: View) {
     }
 
     private fun getPopupWindow(): PopupWindow {
-        val imageView = getImage()
-        val popup = PopupWindow()
-        popup.height = (SIZE * MAX_SCALE).toInt()
-        popup.width = popup.height
-        popup.contentView = imageView
-        popup.isClippingEnabled = false
-        popup.isTouchable = false
+        var popup: PopupWindow? = null
+        for (window in windows) {
+            if (!window.isShowing) popup = window
+        }
+        if (popup == null) {
+            val imageView = getImage()
+            popup = PopupWindow()
+            popup.height = (SIZE * MAX_SCALE).toInt()
+            popup.width = popup.height
+            popup.contentView = imageView
+            popup.isClippingEnabled = false
+            popup.isTouchable = false
+            windows.add(popup)
+        }
         popup.update()
         return popup
     }
@@ -49,6 +60,10 @@ class Animator(private val rootView: View) {
         animateFadeIn(x, y) { view, popup ->
             animateFadeOut(view, popup)
         }
+    }
+
+    fun stop(){
+        isInterrupted = true
     }
 
     private fun animateFadeIn(
@@ -93,16 +108,17 @@ class Animator(private val rootView: View) {
             }
     }
 
-    fun animateDrag(startX: Int, startY: Int, endX: Int, endY: Int, duration: Long) {
+    fun animateDrag(startX: Int, startY: Int, endX: Int, endY: Int, duration: Long, useLongClick: Boolean) {
+        isInterrupted = false
         animateFadeIn(startX, startY) { view, popup ->
             Thread {
-                Thread.sleep(Clicker.LONG_CLICK)
+                Thread.sleep(if (useLongClick) Clicker.LONG_CLICK else Clicker.CLICK_DURATION.toLong())
                 val viewLocation = IntArray(2)
-                rootView.getLocationOnScreen(viewLocation)
                 val interval: Float = 1000 / 60f
                 val steps: Float = duration.toFloat() / interval
                 for (i in 0..steps.toInt()) {
                     rootView.post {
+                        rootView.getLocationOnScreen(viewLocation)
                         popup.update(
                             (-viewLocation[0] + (endX - startX) / steps * i - popup.width / 2 + startX).toInt(),
                             (-viewLocation[1] + (endY - startY) / steps * i - popup.height / 2 + startY).toInt(),
@@ -111,6 +127,7 @@ class Animator(private val rootView: View) {
                         )
                     }
                     Thread.sleep(interval.toLong())
+                    if (isInterrupted) break
                 }
                 rootView.post { animateFadeOut(view, popup) }
             }.start()

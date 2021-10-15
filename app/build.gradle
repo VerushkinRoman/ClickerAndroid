@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -58,6 +59,10 @@ dependencies {
     // RxJava 3
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation 'io.reactivex.rxjava3:rxjava:3.0.6'
+
+    // Dagger
+    implementation 'com.google.dagger:dagger:2.36'
+    kapt 'com.google.dagger:dagger-compiler:2.36'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
