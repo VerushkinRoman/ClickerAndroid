@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="GridDataStyle" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="android:layout_columnWeight">1</item>
         <item name="android:layout_gravity">fill_horizontal</item>
         <item name="android:clickable">false</item>
         <item name="android:insetLeft">2dp</item>

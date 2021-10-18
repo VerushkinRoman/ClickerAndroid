@@ -5,11 +5,11 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.IBinder
-import android.util.Log
 import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.core.content.getSystemService
+import androidx.core.graphics.get
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import com.posse.android.clicker.R
@@ -18,11 +18,10 @@ import com.posse.android.clicker.core.SCRIPT
 import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.databinding.LogItemBinding
 import com.posse.android.clicker.model.MyLog
+import com.posse.android.clicker.model.Screenshot
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
 import kotlin.math.abs
 import kotlin.system.exitProcess
 
@@ -35,9 +34,9 @@ class MainFragment : Service() {
         }
 
     private lateinit var layoutParams: WindowManager.LayoutParams
-
+    private lateinit var backgroundLayoutParams: WindowManager.LayoutParams
+    private lateinit var backgroundView: BackgroundView
     private var _binding: FragmentMainBinding? = null
-
     private val binding get() = _binding!!
 
     private val clicker by lazy { Clicker(binding.root) }
@@ -57,43 +56,25 @@ class MainFragment : Service() {
         super.onCreate()
         _binding = FragmentMainBinding.inflate(LayoutInflater.from(this), null, false)
         initMenu()
+        initBackground()
         initButtons()
         initFloatingWindow()
-
-        readInput()
-
     }
 
-    private fun readInput() {
-        Thread {
-            try {
-                val process =
-                    Runtime.getRuntime().exec(arrayOf("su", "-c", "getevent -t /dev/input/event2"))
-                val input = InputStreamReader(process.inputStream)
-                var s: String? = ""
-                val br = BufferedReader(input)
-                val xPrefix = "0003 0035 "
-                val yPrefix = "0003 0036 "
-                val end = "0003 0039 ffffffff"
-                var lastX = ""
-                var lastY = ""
-                while ((s != null) && Thread.currentThread().isAlive) {
-                    s = br.readLine()
-                    if (s.contains(xPrefix)) lastX = s
-                    if (s.contains(yPrefix)) lastY = s
-                    if (s.contains(end)){
-                        Log.d("touch", "X: ${lastX.substringAfterLast(xPrefix).toLong(16)}")
-                        Log.d("touch", "Y: ${lastY.substringAfterLast(yPrefix).toLong(16)}")
-                        Log.d("touch", "========================")
-                    }
-//                    Log.d("touch", s)
-                }
-                input.close()
-                process.destroy()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }.start()
+    private fun initBackground() {
+        backgroundLayoutParams = WindowManager.LayoutParams().apply {
+            format = PixelFormat.TRANSLUCENT
+            flags =
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            gravity = Gravity.CENTER
+            width = WindowManager.LayoutParams.WRAP_CONTENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+        }
+
+        backgroundView = BackgroundView(this)
+
+        windowManager?.addView(backgroundView, backgroundLayoutParams)
     }
 
     private fun initButtons() {
@@ -130,9 +111,12 @@ class MainFragment : Service() {
                         if (event.pointerCount == 1) {
                             layoutParams.x += deltaX
                             layoutParams.y += deltaY
+                            backgroundLayoutParams.x += deltaX
+                            backgroundLayoutParams.y += deltaY
                             touchConsumedByMove = true
                             windowManager?.apply {
                                 updateViewLayout(binding.root, layoutParams)
+                                updateViewLayout(backgroundView, backgroundLayoutParams)
                             }
                         } else {
                             touchConsumedByMove = false
@@ -178,9 +162,45 @@ class MainFragment : Service() {
     }
 
     private fun initEditorButton() {
+        val coordinates = backgroundView.getData()
+        var disposable: Disposable? = null
         binding.editorButton.setOnClickListener {
             binding.editorLayout.isVisible = !binding.editorLayout.isVisible
             binding.logScrollView.isVisible = false
+
+            if (binding.editorLayout.isVisible) {
+                backgroundLayoutParams.apply {
+                    flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    width = WindowManager.LayoutParams.MATCH_PARENT
+                    height = WindowManager.LayoutParams.MATCH_PARENT
+                }
+                disposable = coordinates
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.computation())
+                    .subscribe { point ->
+                        val picture = Screenshot.get()
+                        picture?.let {
+                            binding.root.post {
+                                binding.savedColor.text = it[point.x, point.y].toString()
+                                binding.savedX.text = point.x.toString()
+                                binding.savedY.text = point.y.toString()
+                            }
+                        }
+                    }
+            } else {
+                backgroundLayoutParams.apply {
+                    flags =
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    width = WindowManager.LayoutParams.WRAP_CONTENT
+                    height = WindowManager.LayoutParams.WRAP_CONTENT
+                }
+                disposable?.dispose()
+            }
+
+            windowManager?.apply {
+                updateViewLayout(backgroundView, backgroundLayoutParams)
+            }
+
         }
     }
 
