@@ -110,7 +110,8 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedX"
                 style="@style/GridDataStyle"
-                tools:text="333" />
+                android:text="0"
+                tools:ignore="HardcodedText" />
 
             <com.google.android.material.button.MaterialButton
                 style="@style/GridDataStyle"
@@ -120,7 +121,8 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedY"
                 style="@style/GridDataStyle"
-                tools:text="666" />
+                android:text="0"
+                tools:ignore="HardcodedText" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/colorLabel"
@@ -130,7 +132,8 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/savedColor"
                 style="@style/GridDataStyle"
-                tools:text="134554677" />
+                android:text="0"
+                tools:ignore="HardcodedText" />
         </GridLayout>
 
         <androidx.core.widget.NestedScrollView

@@ -19,7 +19,10 @@ import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.databinding.LogItemBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
+import com.posse.android.clicker.utils.showToast
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlin.math.abs
@@ -36,6 +39,8 @@ class MainFragment : Service() {
     private lateinit var layoutParams: WindowManager.LayoutParams
     private lateinit var backgroundLayoutParams: WindowManager.LayoutParams
     private lateinit var backgroundView: BackgroundView
+    private lateinit var coordinates: Observable<BackgroundView.Point>
+    private var disposable: Disposable? = null
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
 
@@ -162,45 +167,51 @@ class MainFragment : Service() {
     }
 
     private fun initEditorButton() {
-        val coordinates = backgroundView.getData()
-        var disposable: Disposable? = null
+        coordinates = backgroundView.getData()
         binding.editorButton.setOnClickListener {
             binding.editorLayout.isVisible = !binding.editorLayout.isVisible
             binding.logScrollView.isVisible = false
+            changeBackgroundView()
+        }
+    }
 
-            if (binding.editorLayout.isVisible) {
-                backgroundLayoutParams.apply {
-                    flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    width = WindowManager.LayoutParams.MATCH_PARENT
-                    height = WindowManager.LayoutParams.MATCH_PARENT
+    private fun changeBackgroundView() {
+        if (binding.editorLayout.isVisible) {
+            backgroundLayoutParams.apply {
+                flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                width = WindowManager.LayoutParams.MATCH_PARENT
+                height = WindowManager.LayoutParams.MATCH_PARENT
+            }
+            disposable = coordinates
+                .toFlowable(BackpressureStrategy.MISSING)
+                .onBackpressureDrop {
+                    showToast("Dropped click x:${it.x} y:${it.y}")
                 }
-                disposable = coordinates
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.computation())
-                    .subscribe { point ->
-                        val picture = Screenshot.get()
-                        picture?.let {
-                            binding.root.post {
-                                binding.savedColor.text = it[point.x, point.y].toString()
-                                binding.savedX.text = point.x.toString()
-                                binding.savedY.text = point.y.toString()
-                            }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation(), false, 1)
+                .subscribe { point ->
+                    val picture = Screenshot.get()
+                    picture?.let {
+                        binding.root.post {
+                            binding.savedColor.text = it[point.x, point.y].toString()
+                            binding.savedX.text = point.x.toString()
+                            binding.savedY.text = point.y.toString()
+                            binding.colorLabel.setBackgroundColor(it[point.x, point.y])
                         }
                     }
-            } else {
-                backgroundLayoutParams.apply {
-                    flags =
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    width = WindowManager.LayoutParams.WRAP_CONTENT
-                    height = WindowManager.LayoutParams.WRAP_CONTENT
                 }
-                disposable?.dispose()
+        } else {
+            backgroundLayoutParams.apply {
+                flags =
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                width = WindowManager.LayoutParams.WRAP_CONTENT
+                height = WindowManager.LayoutParams.WRAP_CONTENT
             }
+            disposable?.dispose()
+        }
 
-            windowManager?.apply {
-                updateViewLayout(backgroundView, backgroundLayoutParams)
-            }
-
+        windowManager?.apply {
+            updateViewLayout(backgroundView, backgroundLayoutParams)
         }
     }
 
@@ -208,6 +219,7 @@ class MainFragment : Service() {
         binding.logButton.setOnClickListener {
             binding.logScrollView.isVisible = !binding.logScrollView.isVisible
             binding.editorLayout.isVisible = false
+            changeBackgroundView()
             binding.logScrollView.post { binding.logScrollView.fullScroll(View.FOCUS_DOWN) }
         }
     }

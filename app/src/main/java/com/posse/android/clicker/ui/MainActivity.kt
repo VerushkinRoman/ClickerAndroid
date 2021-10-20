@@ -36,13 +36,26 @@ class MainActivity : AppCompatActivity() {
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        initButtons()
+
         if (Settings.canDrawOverlays(this)) {
-            showMainFragment()
+
         } else {
             startManageDrawOverlaysPermission()
         }
 
         if (!isAccessibilitySettingsOn()) startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    private fun initButtons() {
+        initStartButton()
+    }
+
+    private fun initStartButton() {
+        binding.runButton.setOnClickListener {
+            showMainFragment()
+            finish()
+        }
     }
 
     private fun showMainFragment() {
