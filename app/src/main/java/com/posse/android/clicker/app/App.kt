@@ -1,25 +1,17 @@
 package com.posse.android.clicker.app
 
 import android.app.Application
-import com.posse.android.clicker.di.components.AppComponent
-import com.posse.android.clicker.di.components.DaggerAppComponent
-import com.posse.android.clicker.di.modules.AppModule
+import com.posse.android.clicker.di.*
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 class App : Application() {
 
-    lateinit var appComponent: AppComponent
-
     override fun onCreate() {
         super.onCreate()
-        instance = this
-
-        appComponent = DaggerAppComponent.builder()
-            .appModule(AppModule(this))
-            .build()
-    }
-
-    companion object {
-
-        lateinit var instance: App
+        startKoin {
+            androidContext(this@App)
+            modules(listOf(shared, myLogger, telegram, network, screenshot, root))
+        }
     }
 }

@@ -5,9 +5,9 @@ import android.graphics.BitmapFactory
 import java.io.IOException
 import java.io.OutputStreamWriter
 
-object Screenshot {
+class Screenshot(private val process: Process) {
 
-    private val process = Runtime.getRuntime().exec("su")
+//    private val process = Runtime.getRuntime().exec("su")
     private val outputStream = OutputStreamWriter(process.outputStream)
 
     @Synchronized

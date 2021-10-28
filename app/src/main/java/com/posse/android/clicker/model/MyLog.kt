@@ -1,13 +1,15 @@
 package com.posse.android.clicker.model
 
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.subjects.PublishSubject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
-object MyLog {
+class MyLog {
 
-    private val log = PublishSubject.create<String>()
+    private val log: MutableStateFlow<String> = MutableStateFlow("")
 
-    fun get(): Observable<String> = log
+    fun get(): StateFlow<String> = log
 
-    fun add(string: String) = log.onNext(string)
+    fun add(string: String) {
+        log.value = string
+    }
 }

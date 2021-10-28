@@ -62,7 +62,7 @@ class Animator(private val rootView: View) {
         }
     }
 
-    fun stop(){
+    fun stop() {
         isInterrupted = true
     }
 
@@ -108,7 +108,14 @@ class Animator(private val rootView: View) {
             }
     }
 
-    fun animateDrag(startX: Int, startY: Int, endX: Int, endY: Int, duration: Long, useLongClick: Boolean) {
+    fun animateDrag(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        duration: Long,
+        useLongClick: Boolean
+    ) {
         isInterrupted = false
         animateFadeIn(startX, startY) { view, popup ->
             Thread {

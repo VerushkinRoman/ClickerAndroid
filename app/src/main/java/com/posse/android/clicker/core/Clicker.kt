@@ -2,36 +2,52 @@ package com.posse.android.clicker.core
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.content.SharedPreferences
+import android.graphics.Bitmap
 import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import android.view.ViewConfiguration
+import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.service.MyAccessibilityService
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
+import com.posse.android.clicker.utils.running
+import kotlinx.coroutines.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class Clicker(view: View) {
+class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
 
-    private var scriptThread: Thread? = null
-    private var telegram: Telegram = Telegram()
+    private var clickerJob: Job? = null
+    private val telegram: Telegram by inject()
+    private var telegramJob: Job? = null
     private var gestureCallback: AccessibilityService.GestureResultCallback? = null
-    private val animator = Animator(view)
+    private val animator = Animator(binding.root)
+    private val log: MyLog by inject()
+    private val screenshot: Screenshot by inject()
+    private val preferences: SharedPreferences by inject()
 
     fun start(script: SCRIPT) {
-        if (scriptThread?.isAlive != true) {
-            scriptThread = Thread(FifaMobile(this, script))
-            scriptThread?.start()
+        if (clickerJob == null) {
+            preferences.running = true
+            binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.holo_green_light))
+            clickerJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                FifaMobile(this@Clicker, script).run()
+            }
         }
     }
 
     fun stop() {
-        scriptThread?.interrupt()
+        binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.darker_gray))
+        clickerJob?.cancel()
+        clickerJob = null
         stopTelegram()
         animator.stop()
+        preferences.running = false
     }
 
     fun click(x: Int, y: Int) {
@@ -67,22 +83,26 @@ class Clicker(view: View) {
     }
 
     fun startTelegram(msg: String, delay: Int, repeat: Boolean) {
-        if (!telegram.isAlive) {
-            telegram = Telegram()
-            telegram.start()
+        if (telegramJob == null) {
+            telegramJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                telegram.run()
+            }
         } else telegram.countdown = 0
         telegram.msg = msg
         telegram.delay = delay
         telegram.repeat = repeat
     }
 
-    fun stopTelegram() = telegram.interrupt()
-
-    fun getColor(x: Int, y: Int) {
-        val picture = Screenshot.get()
-        val pixel = picture?.getPixel(x, y)
-        MyLog.add(pixel.toString())
+    fun stopTelegram() {
+        telegramJob?.cancel()
+        telegramJob = null
     }
+
+    fun getColor(x: Int, y: Int): Int? = getScreen()?.getPixel(x, y)
+
+    fun getScreen() = screenshot.get()
+
+    fun getPixelColor(screen: Bitmap, x: Int, y: Int) = screen.getPixel(x, y)
 
     private fun dispatchGestureToService(gesture: GestureDescription) {
         MyAccessibilityService.instance?.dispatchGesture(
@@ -91,6 +111,8 @@ class Clicker(view: View) {
             null
         )
     }
+
+    fun putLog(message: String) = log.add(message)
 
     private fun makeGesture(gesture: Gesture): GestureDescription {
         val clickPath = Path()

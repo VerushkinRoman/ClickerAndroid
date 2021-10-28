@@ -7,4 +7,13 @@
     <string name="accessibility_service_label">ClickerService</string>
     <string name="accessibility_service_description">Service for Clicker</string>
     <string name="color">Color</string>
+    <string name="overlay_not_granted">Overlay permission is NOT granted</string>
+    <string name="overlay_granted">Overlay permission is granted</string>
+    <string name="service_running">Service is running</string>
+    <string name="service_not_running">Service is not running</string>
+    <string name="btn_open_service_screen">Open Service Screen</string>
+    <string name="btn_open_overlay_settings">Open Overlay Settings</string>
+    <string name="btn_run_clicker">Run Clicker</string>
+    <string name="script_for_this_screen_didn_t_found">Script for this screen didn\'t found</string>
+    <string name="btn_ask_superuser">Get Root</string>
 </resources>

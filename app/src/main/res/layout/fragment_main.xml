@@ -37,7 +37,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <androidx.appcompat.widget.AppCompatImageButton
+        <ImageButton
             android:id="@+id/closeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -46,14 +46,25 @@
             android:src="@android:drawable/btn_dialog"
             app:layout_constraintEnd_toEndOf="@id/stopButton"
             app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
+        <ImageButton
+            android:id="@+id/expandButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:backgroundTint="@android:color/transparent"
+            android:padding="0dp"
+            android:src="@android:drawable/button_onoff_indicator_off"
+            app:layout_constraintEnd_toStartOf="@id/closeButton"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/closeButton"
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/startButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/holo_green_dark"
+            android:backgroundTint="@android:color/darker_gray"
             android:text="@string/start"
             android:textColor="?attr/colorOnBackground"
             app:layout_constraintEnd_toStartOf="@id/stopButton"
@@ -136,21 +147,15 @@
                 tools:ignore="HardcodedText" />
         </GridLayout>
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/logScrollView"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/logRecyclerView"
             android:layout_width="0dp"
             android:layout_height="100dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/editorButton"
-            tools:ignore="SpeakableTextPresentCheck">
+            tools:ignore="SpeakableTextPresentCheck" />
 
-            <LinearLayout
-                android:id="@+id/logView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </androidx.core.widget.NestedScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
