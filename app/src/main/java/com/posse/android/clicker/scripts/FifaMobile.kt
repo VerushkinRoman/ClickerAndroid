@@ -5,8 +5,8 @@ import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.SCRIPT
 import com.posse.android.clicker.ui.Animator
 import kotlinx.coroutines.delay
-import java.time.LocalTime
-import java.time.ZoneId
+import org.threeten.bp.LocalTime
+import org.threeten.bp.ZoneId
 
 class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
 
@@ -14,7 +14,7 @@ class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
     private val msg = "Вылет!"
     private val startQuietTime = LocalTime.of(22, 0)
     private val endQuietTime = LocalTime.of(8, 0)
-    private val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zoneId: ZoneId = ZoneId.of("+3")
     private var exitCycle = false
     private lateinit var now: LocalTime
     private lateinit var screen: Bitmap
@@ -227,7 +227,7 @@ class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
             log("connection/bet error")
             pause()
             screen = getScreen()
-            if (pixel(838, 439) == -16088404) { // todo
+            if (pixel(563, 288) == -16281669) {
                 log("logged in")
                 startTelegram("Я зашел", 0, false)
                 pause(3_000)
@@ -267,13 +267,12 @@ class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
         endX: Int,
         endY: Int,
         duration: Long,
-        useLongClick: Boolean = true
     ) {
-        clicker.drag(startX, startY, endX, endY, duration, useLongClick)
+        clicker.drag(startX, startY, endX, endY, duration)
         pause(
             duration
                     + Animator.ANIMATION_DURATION
-                    + if (useLongClick) Clicker.LONG_CLICK else Clicker.CLICK_DURATION.toLong()
+                    + Clicker.CLICK_DURATION.toLong()
         )
     }
 

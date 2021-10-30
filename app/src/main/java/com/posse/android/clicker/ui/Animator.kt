@@ -10,12 +10,15 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.PopupWindow
 import com.posse.android.clicker.core.Clicker
+import kotlinx.coroutines.*
 
 class Animator(private val rootView: View) {
 
     private val windows = arrayListOf<PopupWindow>()
 
     private var isInterrupted = false
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private fun getCircle(): Drawable {
         val drawable = GradientDrawable()
@@ -63,7 +66,7 @@ class Animator(private val rootView: View) {
     }
 
     fun stop() {
-        isInterrupted = true
+        scope.coroutineContext.cancelChildren()
     }
 
     private fun animateFadeIn(
@@ -113,13 +116,12 @@ class Animator(private val rootView: View) {
         startY: Int,
         endX: Int,
         endY: Int,
-        duration: Long,
-        useLongClick: Boolean
+        duration: Long
     ) {
         isInterrupted = false
         animateFadeIn(startX, startY) { view, popup ->
-            Thread {
-                Thread.sleep(if (useLongClick) Clicker.LONG_CLICK else Clicker.CLICK_DURATION.toLong())
+            scope.launch {
+                delay(Clicker.CLICK_DURATION.toLong())
                 val viewLocation = IntArray(2)
                 val interval: Float = 1000 / 60f
                 val steps: Float = duration.toFloat() / interval
@@ -133,11 +135,11 @@ class Animator(private val rootView: View) {
                             -1
                         )
                     }
-                    Thread.sleep(interval.toLong())
+                    delay(interval.toLong())
                     if (isInterrupted) break
                 }
                 rootView.post { animateFadeOut(view, popup) }
-            }.start()
+            }
         }
     }
 

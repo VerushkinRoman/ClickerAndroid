@@ -5,10 +5,7 @@ import android.graphics.BitmapFactory
 import java.io.IOException
 import java.io.OutputStreamWriter
 
-class Screenshot(private val process: Process) {
-
-//    private val process = Runtime.getRuntime().exec("su")
-    private val outputStream = OutputStreamWriter(process.outputStream)
+class Screenshot(private val outputStream: OutputStreamWriter, private val process: Process) {
 
     @Synchronized
     fun get(): Bitmap? {

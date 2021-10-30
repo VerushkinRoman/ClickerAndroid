@@ -2,6 +2,7 @@ package com.posse.android.clicker.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.posse.android.clicker.BuildConfig
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.network.ApiService
@@ -12,6 +13,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
+import java.io.OutputStreamWriter
 
 val myLogger = module {
     single<MyLog> { MyLog() }
@@ -33,7 +35,7 @@ val network = module {
 
     single<Retrofit> {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BASE_URL + "/bot" + BuildConfig.API_TOKEN + "/")
             .client(get())
             .build()
     }
@@ -46,9 +48,10 @@ val network = module {
 }
 
 val screenshot = module {
-    single<Screenshot> { Screenshot(get()) }
+    single<Screenshot> { Screenshot(get(), get()) }
 }
 
 val root = module {
     single<Process> { Runtime.getRuntime().exec("su") }
+    single<OutputStreamWriter> { OutputStreamWriter(get<Process>().outputStream) }
 }

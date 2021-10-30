@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.view.*
 import android.widget.ArrayAdapter
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.android.ext.android.inject
 import kotlin.math.abs
 import kotlin.system.exitProcess
-
 
 class MainFragment : Service() {
 
@@ -98,7 +98,9 @@ class MainFragment : Service() {
             format = PixelFormat.TRANSLUCENT
             flags =
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else WindowManager.LayoutParams.TYPE_PHONE
             gravity = Gravity.CENTER
             width = WindowManager.LayoutParams.WRAP_CONTENT
             height = WindowManager.LayoutParams.WRAP_CONTENT
@@ -170,6 +172,8 @@ class MainFragment : Service() {
         binding.logButton.visibility = View.GONE
         binding.editorButton.visibility = View.GONE
         binding.chooseLayout.visibility = View.GONE
+        binding.logRecyclerView.visibility = View.GONE
+        binding.editorLayout.visibility = View.GONE
     }
 
     private fun collapseButton(button: MaterialButton, text: CharSequence) {
@@ -260,7 +264,9 @@ class MainFragment : Service() {
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else WindowManager.LayoutParams.TYPE_PHONE
             gravity = Gravity.CENTER
             width = WindowManager.LayoutParams.WRAP_CONTENT
             height = WindowManager.LayoutParams.WRAP_CONTENT
