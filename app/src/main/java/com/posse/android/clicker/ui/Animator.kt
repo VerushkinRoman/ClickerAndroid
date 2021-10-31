@@ -66,7 +66,13 @@ class Animator(private val rootView: View) {
     }
 
     fun stop() {
+        isInterrupted = true
         scope.coroutineContext.cancelChildren()
+        scope.launch {
+            windows.forEach {
+                if (it.isShowing) withContext(Dispatchers.Main) { it.dismiss() }
+            }
+        }
     }
 
     private fun animateFadeIn(

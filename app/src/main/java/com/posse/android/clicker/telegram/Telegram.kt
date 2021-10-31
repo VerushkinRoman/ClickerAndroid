@@ -1,12 +1,14 @@
 package com.posse.android.clicker.telegram
 
-import com.posse.android.clicker.BuildConfig
+import android.content.SharedPreferences
 import com.posse.android.clicker.network.RetrofitImplementation
+import com.posse.android.clicker.utils.chatID
 import kotlinx.coroutines.delay
 
 data class Telegram(
+    private val preferences: SharedPreferences,
     private val retrofit: RetrofitImplementation,
-    private val chatID: String = BuildConfig.CHAT_ID,
+    private val chatID: Long = preferences.chatID ?: 0,
     var delay: Int = 0,
     var msg: String = "",
     var repeat: Boolean = false,
@@ -20,7 +22,7 @@ data class Telegram(
                 delay(1000)
                 countdown++
             }
-            retrofit.sendMessage(chatID.toLong(), msg)
+            retrofit.sendMessage(chatID, msg)
         } while (repeat)
     }
 }

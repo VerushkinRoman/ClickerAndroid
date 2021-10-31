@@ -13,16 +13,19 @@ import com.posse.android.clicker.R
 import com.posse.android.clicker.core.SCRIPT
 import com.posse.android.clicker.databinding.ActivityMainBinding
 import com.posse.android.clicker.utils.showToast
+import org.koin.android.ext.android.inject
+import java.io.OutputStreamWriter
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
     private val clicker by lazy { Intent(this, MainFragment::class.java) }
 
     private val permissions = ActivePermissions(
         overlay = false,
-        screenResolution = false
+        screenResolution = false,
+        root = false
     )
 
     private var resultLauncher =
@@ -42,11 +45,52 @@ class MainActivity : AppCompatActivity() {
 
     private fun initButtons() {
         initOverlayButton()
+        initSettingsButton()
+        initRootButton()
         initStartButton()
     }
 
+    private fun initSettingsButton() {
+        binding.settingsButton.setOnClickListener {
+            SettingsFragment.newInstance().show(supportFragmentManager, null)
+        }
+    }
+
+    private fun initRootButton() {
+        if (checkRoot()) {
+            permissions.root = true
+            binding.superUserText.visibility = View.GONE
+            binding.superUserButton.isEnabled = false
+        } else {
+            permissions.root = false
+            binding.superUserText.visibility = View.VISIBLE
+            binding.superUserButton.isEnabled = true
+            binding.superUserButton.setOnClickListener {
+                initRootButton()
+            }
+        }
+    }
+
+    private fun checkRoot(): Boolean {
+        return canExecuteCommand("/system/xbin/which su")
+                || canExecuteCommand("/system/bin/which su")
+                || canExecuteCommand("which su")
+    }
+
+    private fun canExecuteCommand(command: String): Boolean {
+        var executedSuccessfully = false
+        try {
+            Runtime.getRuntime().exec(command)
+            executedSuccessfully = true
+        } catch (e: Exception) {
+        }
+        return executedSuccessfully
+    }
+
     private fun initStartButton() {
-        if (permissions.overlay && permissions.screenResolution) {
+        if (permissions.overlay
+            && permissions.screenResolution
+            && permissions.root) {
             binding.runButton.isEnabled = true
             binding.runButton.setOnClickListener {
                 showMainFragment()
@@ -109,6 +153,7 @@ class MainActivity : AppCompatActivity() {
 
     private class ActivePermissions(
         var overlay: Boolean,
-        var screenResolution: Boolean
+        var screenResolution: Boolean,
+        var root: Boolean
     )
 }

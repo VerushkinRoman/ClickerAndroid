@@ -8,10 +8,14 @@ import kotlinx.coroutines.delay
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 
-class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
+class FifaMobile(
+    private val clicker: Clicker,
+    private val script: SCRIPT,
+    private val msg: String,
+    private val loginMsg: String
+) {
 
     private val delay = 300
-    private val msg = "Вылет!"
     private val startQuietTime = LocalTime.of(22, 0)
     private val endQuietTime = LocalTime.of(8, 0)
     private val zoneId: ZoneId = ZoneId.of("+3")
@@ -44,7 +48,8 @@ class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
     private suspend fun marketClicking() {
 
         if (pixel(200, 61) == -15462074 //mail
-            && (pixel(227, 139) == -13305319) //green
+            && ((pixel(227, 139) == -13305319) //green
+                    || pixel(227, 138) == -6422528) //red
         ) {
             log("mail. Collect")
             click(943, 134)
@@ -229,8 +234,8 @@ class FifaMobile(private val clicker: Clicker, private val script: SCRIPT) {
             screen = getScreen()
             if (pixel(563, 288) == -16281669) {
                 log("logged in")
-                startTelegram("Я зашел", 0, false)
-                pause(3_000)
+                startTelegram(loginMsg, 0, false)
+                pause(5_000)
                 stop()
             } else {
                 click(272, 480)

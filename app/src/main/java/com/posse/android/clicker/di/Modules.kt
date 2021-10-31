@@ -2,12 +2,12 @@ package com.posse.android.clicker.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.posse.android.clicker.BuildConfig
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.network.ApiService
 import com.posse.android.clicker.network.RetrofitImplementation
 import com.posse.android.clicker.telegram.Telegram
+import com.posse.android.clicker.utils.botToken
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
@@ -24,7 +24,7 @@ val shared = module {
 }
 
 val telegram = module {
-    single<Telegram> { Telegram(get()) }
+    single<Telegram> { Telegram(get(), get()) }
 }
 
 val network = module {
@@ -35,7 +35,7 @@ val network = module {
 
     single<Retrofit> {
         Retrofit.Builder()
-            .baseUrl(BASE_URL + "/bot" + BuildConfig.API_TOKEN + "/")
+            .baseUrl(BASE_URL + "/bot" + (get<SharedPreferences>().botToken ?: 0) + "/")
             .client(get())
             .build()
     }

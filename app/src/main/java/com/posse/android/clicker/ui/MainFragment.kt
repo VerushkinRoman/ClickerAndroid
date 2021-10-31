@@ -80,6 +80,17 @@ class MainFragment : Service() {
         initLog()
         initFloatingWindow()
         runPreviousTask()
+        openLastError()
+    }
+
+    private fun openLastError() {
+        val error = preferences.lastError
+        if (!error.isNullOrEmpty()) {
+            clicker.stop()
+            binding.logRecyclerView.visibility = View.VISIBLE
+            adapter.add(error)
+            preferences.lastError = null
+        }
     }
 
     private fun runPreviousTask() {
@@ -174,6 +185,7 @@ class MainFragment : Service() {
         binding.chooseLayout.visibility = View.GONE
         binding.logRecyclerView.visibility = View.GONE
         binding.editorLayout.visibility = View.GONE
+        changeBackgroundView()
     }
 
     private fun collapseButton(button: MaterialButton, text: CharSequence) {
@@ -395,7 +407,7 @@ class MainFragment : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     data class ButtonDimens(

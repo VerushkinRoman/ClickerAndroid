@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/runLayout"
+        app:layout_constraintBottom_toTopOf="@id/settingsButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/overlayLayout">
@@ -45,7 +45,9 @@
             android:id="@+id/superUserText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="SuperUser" />
+            android:visibility="gone"
+            android:text="@string/root_access_didn_t_granted"
+            android:textColor="@android:color/holo_red_dark" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/superUserButton"
@@ -53,6 +55,16 @@
             android:layout_height="wrap_content"
             android:text="@string/btn_ask_superuser" />
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings"
+        app:layout_constraintTop_toBottomOf="@id/superUserLayout"
+        app:layout_constraintBottom_toTopOf="@id/runLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <LinearLayout
         android:id="@+id/runLayout"
@@ -63,7 +75,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/superUserLayout">
+        app:layout_constraintTop_toBottomOf="@id/settingsButton">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/runText"

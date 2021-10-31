@@ -2,14 +2,14 @@ package com.posse.android.clicker.core
 
 import android.content.SharedPreferences
 import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
 import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
+import com.posse.android.clicker.utils.telegramMsg
+import com.posse.android.clicker.utils.loginText
 import com.posse.android.clicker.utils.running
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
@@ -26,32 +26,46 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     private val screenshot: Screenshot by inject()
     private val preferences: SharedPreferences by inject()
     private val outputStream: OutputStreamWriter by inject()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun start(script: SCRIPT) {
         if (clickerJob == null) {
             preferences.running = true
             binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.holo_green_light))
-            clickerJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                FifaMobile(this@Clicker, script).run()
+            clickerJob = coroutineScope.launch {
+                var msg = preferences.telegramMsg
+                if (msg.isNullOrEmpty()) msg = " "
+                var loginMsg = preferences.loginText
+                if (loginMsg.isNullOrEmpty()) loginMsg = " "
+                FifaMobile(this@Clicker, script, msg, loginMsg).run()
             }
         }
     }
 
     fun stop() {
-        binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.darker_gray))
+        coroutineScope.launch { animator.stop() }
+        CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
+            binding.startButton.setBackgroundColor(
+                binding.root.context.getColor(android.R.color.darker_gray)
+            )
+        }
         clickerJob?.cancel()
         clickerJob = null
         stopTelegram()
-        animator.stop()
         preferences.running = false
     }
 
     fun click(x: Int, y: Int) {
-        animator.animateClick(x, y)
-        Handler(Looper.getMainLooper()).postDelayed({
-            outputStream.write("input tap $x $y\n")
-            outputStream.flush()
-        }, Animator.ANIMATION_DURATION)
+        coroutineScope.launch {
+            runCatching {
+                outputStream.write("input tap $x $y\n")
+                outputStream.flush()
+            }
+        }
+        coroutineScope.launch {
+            delay(400)
+            animator.animateClick(x, y)
+        }
     }
 
     fun drag(
@@ -61,22 +75,27 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         endY: Int,
         duration: Long
     ) {
-        animator.animateDrag(startX, startY, endX, endY, duration)
-        Handler(Looper.getMainLooper()).postDelayed({
-            outputStream.write("input swipe $startX $startY $endX $endY $duration\n")
-            outputStream.flush()
-        }, Animator.ANIMATION_DURATION)
+        coroutineScope.launch {
+            runCatching {
+                outputStream.write("input swipe $startX $startY $endX $endY $duration\n")
+                outputStream.flush()
+            }
+        }
+        coroutineScope.launch {
+            delay(500)
+            animator.animateDrag(startX, startY, endX, endY, duration)
+        }
     }
 
     fun startTelegram(msg: String, delay: Int, repeat: Boolean) {
-        if (telegramJob == null) {
-            telegramJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                telegram.run()
-            }
-        } else telegram.countdown = 0
         telegram.msg = msg
         telegram.delay = delay
         telegram.repeat = repeat
+        if (telegramJob == null) {
+            telegramJob = coroutineScope.launch {
+                telegram.run()
+            }
+        } else telegram.countdown = 0
     }
 
     fun stopTelegram() {
