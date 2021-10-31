@@ -8,9 +8,10 @@ import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
-import com.posse.android.clicker.utils.telegramMsg
+import com.posse.android.clicker.utils.animator
 import com.posse.android.clicker.utils.loginText
 import com.posse.android.clicker.utils.running
+import com.posse.android.clicker.utils.telegramMsg
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,14 +19,14 @@ import java.io.OutputStreamWriter
 
 class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
 
-    private var clickerJob: Job? = null
+    private val preferences: SharedPreferences by inject()
     private val telegram: Telegram by inject()
-    private var telegramJob: Job? = null
-    private val animator = Animator(binding.root)
     private val log: MyLog by inject()
     private val screenshot: Screenshot by inject()
-    private val preferences: SharedPreferences by inject()
     private val outputStream: OutputStreamWriter by inject()
+    private var clickerJob: Job? = null
+    private var telegramJob: Job? = null
+    private val animator: Animator? = if (preferences.animator) Animator(binding.root) else null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun start(script: SCRIPT) {
@@ -43,7 +44,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     }
 
     fun stop() {
-        coroutineScope.launch { animator.stop() }
+        coroutineScope.launch { animator?.stop() }
         CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             binding.startButton.setBackgroundColor(
                 binding.root.context.getColor(android.R.color.darker_gray)
@@ -64,7 +65,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         }
         coroutineScope.launch {
             delay(400)
-            animator.animateClick(x, y)
+            animator?.animateClick(x, y)
         }
     }
 
@@ -83,7 +84,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         }
         coroutineScope.launch {
             delay(500)
-            animator.animateDrag(startX, startY, endX, endY, duration)
+            animator?.animateDrag(startX, startY, endX, endY, duration)
         }
     }
 
