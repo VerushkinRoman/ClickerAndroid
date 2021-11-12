@@ -30,7 +30,7 @@ class FifaMobile(
 
             when (script) {
                 SCRIPT.Market -> marketClicking()
-                SCRIPT.Test -> test()
+                SCRIPT.EventAttack -> eventAttack()
             }
 
             now = LocalTime.now(zoneId)
@@ -40,10 +40,35 @@ class FifaMobile(
         }
     }
 
-    private suspend fun test() {
-        click(200, 200)
-        pause()
+    private suspend fun eventAttack() {
+        if (pixel(217, 126) == -2868195) {
+            log("Event main")
+            click(332, 113)
+        }
+
+        if (pixel(402, 143) == -367826) {
+            log("Day of dead")
+            if (((pixel(684, 631) == -39636) || (pixel(668, 624) == -1549272))
+                && (pixel(417, 651) != -39636)) {
+                log("Vs attack")
+                click(635, 592)
+                pause(5_000)
+                screen = getScreen()
+            }
+        }
+
+        if ((pixel(417, 651) == -39636) || (pixel(399, 631) == -2533851)) {
+            log("Ready Play")
+            if (pixel(902, 291) == -1749997) {
+                log("Play")
+                click(1019, 631)
+                pause(120_000)
+            }
+        }
+
+        errorsCheck()
     }
+
 
     private suspend fun marketClicking() {
 
@@ -257,6 +282,13 @@ class FifaMobile(
         if (pixel(272, 449) == -2842294) {
             log("league tournament")
             click(1044, 666)
+        }
+
+        if (pixel(731, 346) == -4413106 //coin
+            && pixel(224, 663) == -14024759 //buy button
+        ) {
+            log("buy")
+            click(224, 663)
         }
 
     }

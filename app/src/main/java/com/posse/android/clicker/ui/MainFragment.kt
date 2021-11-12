@@ -13,7 +13,6 @@ import android.widget.AutoCompleteTextView
 import androidx.core.content.getSystemService
 import androidx.core.graphics.get
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.button.MaterialButton
 import com.posse.android.clicker.R
@@ -79,7 +78,6 @@ class MainFragment : Service() {
         initAdapter()
         initLog()
         initFloatingWindow()
-        runPreviousTask()
         openLastError()
     }
 
@@ -90,17 +88,6 @@ class MainFragment : Service() {
             binding.logRecyclerView.visibility = View.VISIBLE
             adapter.add(error)
             preferences.lastError = null
-        }
-    }
-
-    private fun runPreviousTask() {
-        if (preferences.running) {
-            var scriptToLaunch = script
-            val scriptText = preferences.lastScript ?: scriptToLaunch.text
-            SCRIPT.values().forEach {
-                if (it.text == scriptText) scriptToLaunch = it
-            }
-            clicker.start(scriptToLaunch)
         }
     }
 
@@ -377,10 +364,11 @@ class MainFragment : Service() {
         initMenuItems()
         val adapter = ArrayAdapter(this, R.layout.list_item, menuItems)
         (binding.chooseLayout.editText as? AutoCompleteTextView)?.setAdapter(adapter)
-        binding.chooseLayout.editText?.setText(menuItems[0])
-        binding.chooseLayout.editText?.doOnTextChanged { text, _, _, _ ->
+        binding.script.setText(menuItems[0], false)
+        binding.script.setOnItemClickListener { _, _, position, _ ->
+            val element = adapter.getItem(position)
             SCRIPT.values().forEach {
-                if (it.text == text) script = it
+                if (it.text == element) script = it
             }
         }
     }
