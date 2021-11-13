@@ -69,6 +69,24 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         }
     }
 
+    fun recentButton(){
+        coroutineScope.launch {
+            runCatching {
+                outputStream.write("input keyevent KEYCODE_APP_SWITCH\n")
+                outputStream.flush()
+            }
+        }
+    }
+
+    fun backButton(){
+        coroutineScope.launch {
+            runCatching {
+                outputStream.write("input keyevent KEYCODE_BACK\n")
+                outputStream.flush()
+            }
+        }
+    }
+
     fun drag(
         startX: Int,
         startY: Int,
