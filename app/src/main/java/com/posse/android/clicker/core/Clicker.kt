@@ -6,6 +6,7 @@ import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
+import com.posse.android.clicker.scripts.LooneyTunes
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
 import com.posse.android.clicker.utils.animator
@@ -29,7 +30,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     private val animator: Animator? = if (preferences.animator) Animator(binding.root) else null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun start(script: SCRIPT) {
+    fun start(script: Script) {
         if (clickerJob == null) {
             preferences.running = true
             binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.holo_green_light))
@@ -38,7 +39,10 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
                 if (msg.isNullOrEmpty()) msg = " "
                 var loginMsg = preferences.loginText
                 if (loginMsg.isNullOrEmpty()) loginMsg = " "
-                FifaMobile(this@Clicker, script, msg, loginMsg).run()
+                when(script){
+                    is Script.FifaMobile -> FifaMobile(this@Clicker, script, msg, loginMsg).run()
+                    is Script.LooneyTunes -> LooneyTunes(this@Clicker, script, msg, loginMsg).run()
+                }
             }
         }
     }

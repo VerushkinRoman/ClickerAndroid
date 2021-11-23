@@ -10,11 +10,9 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.posse.android.clicker.R
-import com.posse.android.clicker.core.SCRIPT
+import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.databinding.ActivityMainBinding
 import com.posse.android.clicker.utils.showToast
-import org.koin.android.ext.android.inject
-import java.io.OutputStreamWriter
 
 class MainActivity : AppCompatActivity() {
 
@@ -90,7 +88,8 @@ class MainActivity : AppCompatActivity() {
     private fun initStartButton() {
         if (permissions.overlay
             && permissions.screenResolution
-            && permissions.root) {
+            && permissions.root
+        ) {
             binding.runButton.isEnabled = true
             binding.runButton.setOnClickListener {
                 showMainFragment()
@@ -127,13 +126,16 @@ class MainActivity : AppCompatActivity() {
         display.getSize(size)
         val width: Int = size.x
         val height: Int = size.y
-        SCRIPT.values().forEach {
-            if ((it.height == height || (it.height == width))
-                && (it.width == width || it.width == height)
-            ) {
-                binding.runText.visibility = View.GONE
-                permissions.screenResolution = true
-                return true
+
+        Script::class.sealedSubclasses.forEach {
+            it::class.nestedClasses.forEach { innerClass ->
+                if (((innerClass as Script).height == height || ((innerClass as Script).height == width))
+                    && ((innerClass as Script).width == width || (innerClass as Script).width == height)
+                ) {
+                    binding.runText.visibility = View.GONE
+                    permissions.screenResolution = true
+                    return true
+                }
             }
         }
         return false

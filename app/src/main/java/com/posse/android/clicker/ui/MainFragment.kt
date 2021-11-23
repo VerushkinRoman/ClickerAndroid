@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.button.MaterialButton
 import com.posse.android.clicker.R
 import com.posse.android.clicker.core.Clicker
-import com.posse.android.clicker.core.SCRIPT
+import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
@@ -62,7 +62,7 @@ class MainFragment : Service() {
     private var touchConsumedByMove = false
     private var lasTimeExpandTouched = System.currentTimeMillis()
 
-    private var script = SCRIPT.values()[0]
+    private var script: Script = Script.FifaMobile.Market()
     private val adapter: MainAdapter = MainAdapter()
 
     private var defaultButton: ButtonDimens? = null
@@ -367,15 +367,19 @@ class MainFragment : Service() {
         binding.script.setText(menuItems[0], false)
         binding.script.setOnItemClickListener { _, _, position, _ ->
             val element = adapter.getItem(position)
-            SCRIPT.values().forEach {
-                if (it.text == element) script = it
+            Script::class.sealedSubclasses.forEach {
+                it::class.nestedClasses.forEach { innerClass ->
+                    if ((innerClass as Script).script == element) script = innerClass
+                }
             }
         }
     }
 
     private fun initMenuItems() {
-        SCRIPT.values().forEach {
-            menuItems.add(it.name)
+        Script::class.sealedSubclasses.forEach {
+            it::class.nestedClasses.forEach { innerClass ->
+                menuItems.add((innerClass as Script).script)
+            }
         }
     }
 
