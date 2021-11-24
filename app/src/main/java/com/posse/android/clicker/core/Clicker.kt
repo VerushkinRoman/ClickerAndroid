@@ -39,9 +39,9 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
                 if (msg.isNullOrEmpty()) msg = " "
                 var loginMsg = preferences.loginText
                 if (loginMsg.isNullOrEmpty()) loginMsg = " "
-                when(script){
-                    is Script.FifaMobile -> FifaMobile(this@Clicker, script, msg, loginMsg).run()
-                    is Script.LooneyTunes -> LooneyTunes(this@Clicker, script, msg, loginMsg).run()
+                when (script.game) {
+                    Games.FifaMobile -> FifaMobile(this@Clicker, script, msg, loginMsg).run()
+                    Games.LooneyTunes -> LooneyTunes(this@Clicker, script, msg, loginMsg).run()
                 }
             }
         }
@@ -73,7 +73,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         }
     }
 
-    fun recentButton(){
+    fun recentButton() {
         coroutineScope.launch {
             runCatching {
                 outputStream.write("input keyevent KEYCODE_APP_SWITCH\n")
@@ -82,7 +82,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         }
     }
 
-    fun backButton(){
+    fun backButton() {
         coroutineScope.launch {
             runCatching {
                 outputStream.write("input keyevent KEYCODE_BACK\n")

@@ -10,7 +10,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.posse.android.clicker.R
-import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.databinding.ActivityMainBinding
 import com.posse.android.clicker.utils.showToast
 
@@ -127,15 +127,13 @@ class MainActivity : AppCompatActivity() {
         val width: Int = size.x
         val height: Int = size.y
 
-        Script::class.sealedSubclasses.forEach {
-            it::class.nestedClasses.forEach { innerClass ->
-                if (((innerClass as Script).height == height || ((innerClass as Script).height == width))
-                    && ((innerClass as Script).width == width || (innerClass as Script).width == height)
-                ) {
-                    binding.runText.visibility = View.GONE
-                    permissions.screenResolution = true
-                    return true
-                }
+        Game.values().forEach { game ->
+            if ((game.height == height || (game.height == width))
+                && (game.width == width || game.width == height)
+            ) {
+                binding.runText.visibility = View.GONE
+                permissions.screenResolution = true
+                return true
             }
         }
         return false

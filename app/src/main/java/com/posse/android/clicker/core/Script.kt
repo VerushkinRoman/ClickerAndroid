@@ -1,29 +1,34 @@
 package com.posse.android.clicker.core
 
-sealed interface Script {
+interface Script {
+    val game: Games
     val script: String
     val width: Int
     val height: Int
+}
 
-    sealed interface FifaMobile {
-        data class Market(
-            override val width: Int = 1280,
-            override val height: Int = 720,
-            override val script: String = "Market"
-        ) : Script
-
-        data class EventAttack(
-            override val width: Int = 1280,
-            override val height: Int = 720,
-            override val script: String = "EventAttack"
-        ) : Script
+enum class Game : Script {
+    Market {
+        override val game: Games = Games.FifaMobile
+        override val script: String = "Market"
+        override val width: Int = 1280
+        override val height: Int = 720
+    },
+    EventAttack {
+        override val game: Games = Games.FifaMobile
+        override val script: String = "Event Attack"
+        override val width: Int = 1280
+        override val height: Int = 720
+    },
+    Ads {
+        override val game: Games = Games.LooneyTunes
+        override val script: String = "Ads"
+        override val width: Int = 1280
+        override val height: Int = 720
     }
+}
 
-    sealed interface LooneyTunes {
-        data class Ads(
-            override val width: Int = 1280,
-            override val height: Int = 720,
-            override val script: String = "Ads"
-        ) : Script
-    }
+enum class Games(val naming: String) {
+    FifaMobile("Fifa Mobile"),
+    LooneyTunes("Looney Tunes")
 }

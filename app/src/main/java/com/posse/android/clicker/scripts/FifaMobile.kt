@@ -1,6 +1,7 @@
 package com.posse.android.clicker.scripts
 
 import com.posse.android.clicker.core.Clicker
+import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.scripts.base.BaseScript
 
@@ -15,9 +16,8 @@ class FifaMobile(
         while (true) {
             super.run()
             when (script) {
-                is Script.FifaMobile.Market -> marketClicking()
-                is Script.FifaMobile.EventAttack -> eventAttack()
-                else -> Unit
+                Game.Market -> marketClicking()
+                Game.EventAttack -> eventAttack()
             }
         }
     }

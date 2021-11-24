@@ -1,6 +1,7 @@
 package com.posse.android.clicker.scripts
 
 import com.posse.android.clicker.core.Clicker
+import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.scripts.base.BaseScript
 import kotlinx.coroutines.launch
@@ -19,7 +20,9 @@ class LooneyTunes(
     override suspend fun run() {
         while (true) {
             super.run()
-            if (script is Script.LooneyTunes.Ads) looneyClicking()
+            when (script) {
+                Game.Ads -> looneyClicking()
+            }
         }
     }
 
