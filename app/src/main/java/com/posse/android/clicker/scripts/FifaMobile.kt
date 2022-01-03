@@ -107,22 +107,17 @@ class FifaMobile(
                 buy()
                 click(477, 37)
                 log("refresh")
-                while (makeScreenshot()
-                    && LocalTime.now(zoneId) < now.plusSeconds(delay.toLong() + 20)
-                ) pause(100)
                 startTelegram(msg, delay, true)
             } else if (pixel(726, 377) == -16250348) {
                 log("not found")
                 click(477, 37)
                 log("refresh")
-                while (makeScreenshot()
-                    && LocalTime.now(zoneId) < now.plusSeconds(delay.toLong() + 20)
-                ) pause(100)
                 startTelegram(msg, delay, true)
             }
         }
 
         errorsCheck()
+        checkRareErrors()
     }
 
     private suspend fun buy() {
@@ -196,39 +191,10 @@ class FifaMobile(
 
         makeScreenshot()
 
-        if (pixel(364, 430) == -16743049) {
-            log("service error")
-            click(205, 96)
-        }
-
-        if (pixel(37, 286) == -12440173) {
-            log("main screen")
-            click(37, 286)
-            exitCycle = true
-        }
-
-        if (pixel(201, 93) == -44780 // popup red
-            && pixel(1043, 92) == -1 // popup close
-            && pixel(1064, 645) == -14024759 // popup cyan
-        ) {
-            log("some popup")
-            click(1043, 92)
-        }
-
-        if (pixel(366, 430) == -16743049) {
-            log("services error")
-            click(366, 430)
-        }
-
         if (pixel(972, 669) == -7383297) {
             log("next")
             click(972, 669)
-        }
-
-        if (pixel(244, 29) == -16335885) {
-            log("shop")
-            click(244, 29)
-            exitCycle = true
+            return
         }
 
         if (pixel(1064, 681) == -12440173 // next
@@ -236,11 +202,7 @@ class FifaMobile(
         ) {
             log("if next")
             click(1064, 681)
-        }
-
-        if (pixel(119, 128) == -44780) {
-            log("daily news")
-            click(1043, 57)
+            return
         }
 
         if (pixel(260, 236) == -44780) {
@@ -253,22 +215,14 @@ class FifaMobile(
             } else {
                 click(272, 480)
                 exitCycle = true
+                return
             }
-        }
-
-        if (pixel(202, 71) == -1357032 && pixel(1067, 685) == -14024759) {
-            log("new event. confirm")
-            click(1067, 685)
         }
 
         if (pixel(1039, 411) == -16318562) {
             log("opened player card")
             click(34, 44)
-        }
-
-        if (pixel(272, 449) == -2842294) {
-            log("league tournament")
-            click(1044, 666)
+            return
         }
 
         if (pixel(731, 346) == -4413106 //coin
@@ -276,8 +230,66 @@ class FifaMobile(
         ) {
             log("buy")
             click(224, 663)
+            return
         }
 
+        if (minutePassed()) checkRareErrors()
+    }
+
+    private suspend fun checkRareErrors() {
+
+        if (pixel(364, 430) == -16743049) {
+            log("service error")
+            click(205, 96)
+            return
+        }
+
+        if (pixel(37, 286) == -12440173) {
+            log("main screen")
+            click(37, 286)
+            exitCycle = true
+            return
+        }
+
+        if (pixel(201, 93) == -44780 // popup red
+            && pixel(1043, 92) == -1 // popup close
+            && pixel(1064, 645) == -14024759 // popup cyan
+        ) {
+            log("some popup")
+            click(1043, 92)
+            return
+        }
+
+        if (pixel(366, 430) == -16743049) {
+            log("services error")
+            click(366, 430)
+            return
+        }
+
+        if (pixel(272, 449) == -2842294) {
+            log("league tournament")
+            click(1044, 666)
+            return
+        }
+
+        if (pixel(202, 71) == -1357032 && pixel(1067, 685) == -14024759) {
+            log("new event. confirm")
+            click(1067, 685)
+            return
+        }
+
+        if (pixel(119, 128) == -44780) {
+            log("daily news")
+            click(1043, 57)
+            return
+        }
+
+        if (pixel(244, 29) == -16335885) {
+            log("shop")
+            click(244, 29)
+            exitCycle = true
+            return
+        }
     }
 }
 

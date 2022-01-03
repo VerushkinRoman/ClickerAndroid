@@ -2,21 +2,29 @@ package com.posse.android.clicker.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Point
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.posse.android.clicker.R
 import com.posse.android.clicker.core.Game
+import com.posse.android.clicker.core.Games
 import com.posse.android.clicker.databinding.ActivityMainBinding
+import com.posse.android.clicker.utils.lastSelectedGame
 import com.posse.android.clicker.utils.showToast
+import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    private val preferences: SharedPreferences by inject()
 
     private val clicker by lazy { Intent(this, MainFragment::class.java) }
 
@@ -25,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         screenResolution = false,
         root = false
     )
+
+    private val menuItems: MutableList<String> = mutableListOf()
 
     private var resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -39,6 +49,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        initGameSelector()
+    }
+
+    private fun initGameSelector() {
+        Games.values().forEach { game -> menuItems.add(game.naming) }
+        val adapter = ArrayAdapter(this, R.layout.list_item, menuItems)
+        (binding.gameLayout.editText as? AutoCompleteTextView)?.setAdapter(adapter)
+        if (preferences.lastSelectedGame == null) preferences.lastSelectedGame = menuItems.first()
+        binding.game.setText(preferences.lastSelectedGame, false)
+        binding.game.setOnItemClickListener { _, _, position, _ ->
+            preferences.lastSelectedGame = adapter.getItem(position)
+        }
     }
 
     private fun initButtons() {
@@ -128,7 +150,9 @@ class MainActivity : AppCompatActivity() {
         val height: Int = size.y
 
         Game.values().forEach { game ->
-            if ((game.height == height || (game.height == width))
+            if (
+                game.game.naming == binding.game.text.toString()
+                && (game.height == height || game.height == width)
                 && (game.width == width || game.width == height)
             ) {
                 binding.runText.visibility = View.GONE

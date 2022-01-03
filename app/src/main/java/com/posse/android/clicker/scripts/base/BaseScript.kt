@@ -18,13 +18,14 @@ abstract class BaseScript(
     protected val delay = 600
     protected open val startQuietTime: LocalTime = LocalTime.of(22, 0)
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
-    protected val zoneId: ZoneId = ZoneId.of("+3")
+    private val zoneId: ZoneId = ZoneId.of("+3")
     protected var exitCycle = false
-    protected var now: LocalTime = LocalTime.now(zoneId)
+    private var now: LocalTime = LocalTime.now(zoneId)
     private var screen: Bitmap = clicker.getScreen()
     private var oldScreen: Bitmap = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
+    private var lastTimeChecked: Long = 0
 
     open suspend fun run() {
         pause(1)
@@ -90,6 +91,13 @@ abstract class BaseScript(
         return oldScreen.sameAs(screen)
     }
 
+    protected fun minutePassed(): Boolean {
+        return if (System.currentTimeMillis() > lastTimeChecked + MINUTE) {
+            lastTimeChecked = System.currentTimeMillis()
+            true
+        } else false
+    }
+
     protected fun stop() = clicker.stop()
 
     protected fun pixel(x: Int, y: Int) = clicker.getPixelColor(screen, x, y)
@@ -101,6 +109,10 @@ abstract class BaseScript(
         } else {
             clicker.startTelegram(msg, delay, repeat)
         }
+    }
+
+    companion object {
+        private const val MINUTE = 60_000L
     }
 
 }

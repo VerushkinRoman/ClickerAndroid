@@ -41,6 +41,8 @@ class MainFragment : Service() {
         }
 
     private val preferences: SharedPreferences by inject()
+    private val log: MyLog by inject()
+    private val screenshot: Screenshot by inject()
 
     private lateinit var layoutParams: WindowManager.LayoutParams
     private lateinit var backgroundLayoutParams: WindowManager.LayoutParams
@@ -51,9 +53,7 @@ class MainFragment : Service() {
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
 
-    private val clicker by lazy { Clicker(binding) }
-    private val log: MyLog by inject()
-    private val screenshot: Screenshot by inject()
+    private var clicker: Clicker? = null
 
     private var lastX: Int = 0
     private var lastY: Int = 0
@@ -68,8 +68,6 @@ class MainFragment : Service() {
 
     private var defaultButton: ButtonDimens? = null
 
-    private val menuItems: MutableList<String> = mutableListOf()
-
     override fun onCreate() {
         super.onCreate()
         _binding = FragmentMainBinding.inflate(LayoutInflater.from(this), null, false)
@@ -80,12 +78,30 @@ class MainFragment : Service() {
         initLog()
         initFloatingWindow()
         openLastError()
+        initClicker()
+    }
+
+    private fun initClicker() {
+
+        val animator: Animator? = if (preferences.animator) Animator(binding.root) else null
+        var msg = preferences.telegramMsg
+        if (msg.isNullOrEmpty()) msg = " "
+        var loginMsg = preferences.loginText
+        if (loginMsg.isNullOrEmpty()) loginMsg = " "
+
+        clicker = Clicker(msg, loginMsg, animator, log, screenshot) { isRunning ->
+            val color = if (isRunning) android.R.color.holo_green_light
+            else android.R.color.darker_gray
+            binding.startButton.post {
+                binding.startButton.setBackgroundColor(binding.root.context.getColor(color))
+            }
+        }
     }
 
     private fun openLastError() {
         val error = preferences.lastError
         if (!error.isNullOrEmpty()) {
-            clicker.stop()
+            clicker?.stop()
             binding.logRecyclerView.visibility = View.VISIBLE
             adapter.add(error)
             preferences.lastError = null
@@ -277,13 +293,13 @@ class MainFragment : Service() {
 
     private fun initStopButton() {
         binding.stopButton.setOnClickListener {
-            clicker.stop()
+            clicker?.stop()
         }
     }
 
     private fun initStartButton() {
         binding.startButton.setOnClickListener {
-            clicker.start(script)
+            clicker?.start(script)
         }
     }
 
@@ -311,13 +327,11 @@ class MainFragment : Service() {
                 coordinates
                     .collectLatest { point ->
                         val picture = screenshot.get()
-                        picture?.let {
-                            binding.root.post {
-                                binding.savedColor.text = it[point.x, point.y].toString()
-                                binding.savedX.text = point.x.toString()
-                                binding.savedY.text = point.y.toString()
-                                binding.colorLabel.setBackgroundColor(it[point.x, point.y])
-                            }
+                        binding.root.post {
+                            binding.savedColor.text = picture[point.x, point.y].toString()
+                            binding.savedX.text = point.x.toString()
+                            binding.savedY.text = point.y.toString()
+                            binding.colorLabel.setBackgroundColor(picture[point.x, point.y])
                         }
                     }
             }
@@ -362,21 +376,19 @@ class MainFragment : Service() {
     }
 
     private fun initMenu() {
-        initMenuItems()
+        val menuItems: MutableList<String> = mutableListOf()
+        Game.values().forEach { game ->
+            if (game.game.naming == preferences.lastSelectedGame) menuItems.add(game.script)
+        }
         val adapter = ArrayAdapter(this, R.layout.list_item, menuItems)
         (binding.chooseLayout.editText as? AutoCompleteTextView)?.setAdapter(adapter)
-        binding.script.setText(menuItems[0], false)
+        if (!menuItems.contains(preferences.lastScript)) preferences.lastScript = menuItems.first()
+        binding.script.setText(preferences.lastScript, false)
         binding.script.setOnItemClickListener { _, _, position, _ ->
             val element = adapter.getItem(position)
             Game.values().forEach { game ->
                 if (game.script == element) script = game
             }
-        }
-    }
-
-    private fun initMenuItems() {
-        Game.values().forEach { game ->
-            menuItems.add(game.script)
         }
     }
 
@@ -386,7 +398,6 @@ class MainFragment : Service() {
     }
 
     override fun onDestroy() {
-        preferences.running = false
         screenShotScope.coroutineContext.cancelChildren()
         super.onDestroy()
     }
@@ -405,4 +416,8 @@ class MainFragment : Service() {
         val minHeight: Int,
         val minimumHeight: Int
     )
+
+    fun interface StartButtonChanger {
+        fun changeColor(isRunning: Boolean)
+    }
 }

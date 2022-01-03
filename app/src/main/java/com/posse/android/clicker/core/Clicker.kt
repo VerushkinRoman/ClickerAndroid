@@ -1,47 +1,40 @@
 package com.posse.android.clicker.core
 
-import android.content.SharedPreferences
 import android.graphics.Bitmap
-import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.scripts.LooneyTunes
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
-import com.posse.android.clicker.utils.animator
-import com.posse.android.clicker.utils.loginText
-import com.posse.android.clicker.utils.running
-import com.posse.android.clicker.utils.telegramMsg
+import com.posse.android.clicker.ui.MainFragment
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
 import java.io.OutputStreamWriter
 
-class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
+class Clicker(
+    private val msg: String,
+    private val loginMsg: String,
+    private val animator: Animator?,
+    private val log: MyLog,
+    private val screenshot: Screenshot,
+    private val startButtonChanger: MainFragment.StartButtonChanger
+) : KoinComponent {
 
-    private val preferences: SharedPreferences by inject()
     private val telegram: Telegram by inject()
-    private val log: MyLog by inject()
-    private val screenshot: Screenshot by inject()
     private val outputStream: OutputStreamWriter by inject()
     private var clickerJob: Job? = null
     private var telegramJob: Job? = null
-    private val animator: Animator? = if (preferences.animator) Animator(binding.root) else null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var x: Int = 0
     private var y: Int = 0
 
     fun start(script: Script) {
         if (clickerJob == null) {
-            preferences.running = true
-            binding.startButton.setBackgroundColor(binding.root.context.getColor(android.R.color.holo_green_light))
+            startButtonChanger.changeColor(true)
             clickerJob = coroutineScope.launch {
-                var msg = preferences.telegramMsg
-                if (msg.isNullOrEmpty()) msg = " "
-                var loginMsg = preferences.loginText
-                if (loginMsg.isNullOrEmpty()) loginMsg = " "
                 when (script.game) {
                     Games.FifaMobile -> FifaMobile(this@Clicker, script, msg, loginMsg).run()
                     Games.LooneyTunes -> LooneyTunes(this@Clicker, script, msg, loginMsg).run()
@@ -52,15 +45,10 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
 
     fun stop() {
         coroutineScope.launch { animator?.stop() }
-        CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
-            binding.startButton.setBackgroundColor(
-                binding.root.context.getColor(android.R.color.darker_gray)
-            )
-        }
+        coroutineScope.launch { startButtonChanger.changeColor(false) }
         clickerJob?.cancel()
         clickerJob = null
         stopTelegram()
-        preferences.running = false
     }
 
     fun click(x: Int, y: Int) {
@@ -95,7 +83,7 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     ) {
         coroutineScope.launch {
             sendCommand("input swipe $startX $startY $endX $endY $duration\n")
-            delay(700)
+            delay(400)
             animator?.animateDrag(startX, startY, endX, endY, duration)
         }
     }

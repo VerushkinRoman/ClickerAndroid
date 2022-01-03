@@ -5,5 +5,4 @@
     android:layout_height="wrap_content"
     android:ellipsize="end"
     android:maxLines="1"
-    android:textAppearance="?attr/textAppearanceSubtitle1"
     tools:text="Menu Item" />

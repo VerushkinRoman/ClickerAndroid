@@ -3,19 +3,19 @@ package com.posse.android.clicker.utils
 import android.content.SharedPreferences
 import com.posse.android.clicker.BuildConfig
 
-var SharedPreferences.running: Boolean
-    get() = this.getBoolean("running", false)
-    set(value) {
-        this.edit()
-            .putBoolean("running", value)
-            .apply()
-    }
-
 var SharedPreferences.lastScript: String?
     get() = this.getString("script", null)
     set(value) {
         this.edit()
             .putString("script", value)
+            .apply()
+    }
+
+var SharedPreferences.lastSelectedGame: String?
+    get() = this.getString("game", null)
+    set(value) {
+        this.edit()
+            .putString("game", value)
             .apply()
     }
 

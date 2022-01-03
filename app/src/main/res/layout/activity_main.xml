@@ -1,93 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     tools:context=".ui.MainActivity">
 
-    <LinearLayout
-        android:id="@+id/overlayLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/superUserLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/overlayText"
+        <LinearLayout
+            android:id="@+id/overlayLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="Overlay" />
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/superUserLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/overlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Overlay" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/overlayButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_open_overlay_settings" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/superUserLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/settingsButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/overlayLayout">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/superUserText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/root_access_didn_t_granted"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/superUserButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_ask_superuser" />
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/overlayButton"
+            android:id="@+id/settingsButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/btn_open_overlay_settings" />
-    </LinearLayout>
+            android:text="@string/settings"
+            app:layout_constraintBottom_toTopOf="@id/gameLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/superUserLayout" />
 
-    <LinearLayout
-        android:id="@+id/superUserLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/settingsButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/overlayLayout">
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/superUserText"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/gameLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:text="@string/root_access_didn_t_granted"
-            android:textColor="@android:color/holo_red_dark" />
+            app:layout_constraintBottom_toTopOf="@id/runLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settingsButton">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/superUserButton"
+            <AutoCompleteTextView
+                android:id="@+id/game"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:editable="false"
+                android:inputType="none"
+                android:maxEms="10"
+                android:padding="2dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                tools:ignore="Deprecated,LabelFor,TextContrastCheck"
+                tools:text="Fifa Mobile" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/runLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/btn_ask_superuser" />
-    </LinearLayout>
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/gameLayout">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/settingsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/settings"
-        app:layout_constraintTop_toBottomOf="@id/superUserLayout"
-        app:layout_constraintBottom_toTopOf="@id/runLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/runText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/script_for_this_screen_didn_t_found"
+                android:textColor="@android:color/holo_red_dark" />
 
-    <LinearLayout
-        android:id="@+id/runLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settingsButton">
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/runText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/script_for_this_screen_didn_t_found"
-            android:textColor="@android:color/holo_red_dark" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/runButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/btn_run_clicker" />
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/runButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_run_clicker" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
