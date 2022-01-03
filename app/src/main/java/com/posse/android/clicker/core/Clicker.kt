@@ -16,6 +16,7 @@ import com.posse.android.clicker.utils.telegramMsg
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.IOException
 import java.io.OutputStreamWriter
 
 class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
@@ -29,6 +30,8 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     private var telegramJob: Job? = null
     private val animator: Animator? = if (preferences.animator) Animator(binding.root) else null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var x: Int = 0
+    private var y: Int = 0
 
     fun start(script: Script) {
         if (clickerJob == null) {
@@ -61,33 +64,25 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
     }
 
     fun click(x: Int, y: Int) {
+        this.x = x
+        this.y = y
         coroutineScope.launch {
-            runCatching {
-                outputStream.write("input tap $x $y\n")
-                outputStream.flush()
-            }
-        }
-        coroutineScope.launch {
-            delay(400)
+            sendCommand("input tap $x $y\n")
+            delay(500)
             animator?.animateClick(x, y)
         }
     }
 
-    fun recentButton() {
-        coroutineScope.launch {
-            runCatching {
-                outputStream.write("input keyevent KEYCODE_APP_SWITCH\n")
-                outputStream.flush()
-            }
-        }
-    }
+    fun recentButton() = sendCommand("input keyevent KEYCODE_APP_SWITCH\n")
 
-    fun backButton() {
-        coroutineScope.launch {
-            runCatching {
-                outputStream.write("input keyevent KEYCODE_BACK\n")
-                outputStream.flush()
-            }
+    fun backButton() = sendCommand("input keyevent KEYCODE_BACK\n")
+
+    private fun sendCommand(command: String) {
+        try {
+            outputStream.write(command)
+            outputStream.flush()
+        } catch (e: IOException) {
+            log.add(e.toString())
         }
     }
 
@@ -99,13 +94,8 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         duration: Long
     ) {
         coroutineScope.launch {
-            runCatching {
-                outputStream.write("input swipe $startX $startY $endX $endY $duration\n")
-                outputStream.flush()
-            }
-        }
-        coroutineScope.launch {
-            delay(500)
+            sendCommand("input swipe $startX $startY $endX $endY $duration\n")
+            delay(700)
             animator?.animateDrag(startX, startY, endX, endY, duration)
         }
     }
@@ -126,9 +116,14 @@ class Clicker(private val binding: FragmentMainBinding) : KoinComponent {
         telegramJob = null
     }
 
-    fun getColor(x: Int, y: Int): Int? = getScreen()?.getPixel(x, y)
-
-    fun getScreen() = screenshot.get()
+    fun getScreen(): Bitmap {
+        return if (animator == null) screenshot.get()
+        else screenshot.getWithHole(
+            x.toFloat(),
+            y.toFloat(),
+            Animator.SIZE * Animator.MAX_SCALE * .5f
+        )
+    }
 
     fun getPixelColor(screen: Bitmap, x: Int, y: Int) = screen.getPixel(x, y)
 

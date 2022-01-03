@@ -15,19 +15,20 @@ abstract class BaseScript(
     protected val loginMsg: String
 ) {
 
-    protected val delay = 3600
+    protected val delay = 600
     protected open val startQuietTime: LocalTime = LocalTime.of(22, 0)
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
     protected val zoneId: ZoneId = ZoneId.of("+3")
     protected var exitCycle = false
     protected var now: LocalTime = LocalTime.now(zoneId)
-    protected lateinit var screen: Bitmap
-
+    private var screen: Bitmap = clicker.getScreen()
+    private var oldScreen: Bitmap = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
 
     open suspend fun run() {
-        screen = getScreen()
+        pause(1)
+        makeScreenshot()
         now = LocalTime.now(zoneId)
         if (now.isAfter(startQuietTime) || now.isBefore(endQuietTime)) {
             clicker.stopTelegram()
@@ -37,6 +38,14 @@ abstract class BaseScript(
     protected suspend fun click(x: Int, y: Int) {
         clicker.click(x, y)
         pause(Animator.ANIMATION_DURATION)
+        log("click x:$x y:$y")
+    }
+
+    protected suspend fun clickAndWait(x: Int, y: Int) {
+        makeScreenshot()
+        do {
+            click(x, y)
+        } while (makeScreenshot())
     }
 
     protected suspend fun drag(
@@ -54,14 +63,31 @@ abstract class BaseScript(
         )
     }
 
-    protected suspend fun pause(duration: Long = 1000) = delay(duration)
+    protected suspend fun dragAndWait(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        duration: Long,
+    ) {
+        clicker.drag(startX, startY, endX, endY, duration)
+        pause(
+            duration
+                    + Animator.ANIMATION_DURATION
+                    + Clicker.CLICK_DURATION.toLong()
+        )
+        while (!makeScreenshot()) pause(100)
+    }
+
+    protected suspend fun pause(duration: Long = 500) = delay(duration)
 
     protected fun log(message: String) = clicker.putLog(message)
 
-    @JvmName("getScreen1")
-    protected fun getScreen(): Bitmap {
+    protected fun makeScreenshot(): Boolean {
         log("screenshot")
-        return clicker.getScreen()!!
+        oldScreen = screen
+        screen = clicker.getScreen()
+        return oldScreen.sameAs(screen)
     }
 
     protected fun stop() = clicker.stop()

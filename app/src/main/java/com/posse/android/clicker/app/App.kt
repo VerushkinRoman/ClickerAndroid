@@ -25,6 +25,7 @@ class App : Application() {
 
     private fun handleUncaughtException(e: Throwable) {
         prefs.lastError = e.message.toString()
+        e.printStackTrace()
         exitProcess(1)
     }
 }

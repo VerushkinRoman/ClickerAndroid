@@ -25,7 +25,14 @@ enum class Game : Script {
         override val script: String = "Ads"
         override val width: Int = 1280
         override val height: Int = 720
-    }
+    },
+
+//    Test {
+//        override val game: Games = Games.FifaMobile
+//        override val script: String = "Test"
+//        override val width: Int = 1280
+//        override val height: Int = 720
+//    }
 }
 
 enum class Games(val naming: String) {

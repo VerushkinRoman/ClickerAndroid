@@ -18,12 +18,12 @@ class LooneyTunes(
     override val endQuietTime: LocalTime = LocalTime.of(8, 0)
 
     override suspend fun run() {
-        while (true) {
-            super.run()
-            when (script) {
-                Game.Ads -> looneyClicking()
+            while (true) {
+                super.run()
+                when (script) {
+                    Game.Ads -> looneyClicking()
+                }
             }
-        }
     }
 
     private suspend fun looneyClicking() {
@@ -61,7 +61,7 @@ class LooneyTunes(
             click(688, 210)
             clicked = true
             pause(2_000)
-            screen = getScreen()
+            makeScreenshot()
         }
 
         if ((pixel(637, 276) == -14629121) && (pixel(640, 535) == -15045)) {
@@ -85,7 +85,7 @@ class LooneyTunes(
             pause(50_000)
             clicker.backButton()
             pause(2_000)
-            screen = getScreen()
+            makeScreenshot()
         }
 
         if ((pixel(37, 48) == -513) && (pixel(47, 46) == -11711152)) {  // Left corner

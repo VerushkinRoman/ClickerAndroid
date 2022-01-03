@@ -4,6 +4,7 @@ import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.scripts.base.BaseScript
+import org.threeten.bp.LocalTime
 
 class FifaMobile(
     clicker: Clicker,
@@ -18,9 +19,15 @@ class FifaMobile(
             when (script) {
                 Game.Market -> marketClicking()
                 Game.EventAttack -> eventAttack()
+//                Game.Test -> testClicking()
             }
         }
     }
+
+//    private suspend fun testClicking() {
+//        click(400, 400)
+//        pause(2000)
+//    }
 
     private suspend fun eventAttack() {
         if (pixel(217, 126) == -2868195) {
@@ -36,7 +43,7 @@ class FifaMobile(
                 log("Vs attack")
                 click(635, 592)
                 pause(5_000)
-                screen = getScreen()
+                makeScreenshot()
             }
         }
 
@@ -60,7 +67,7 @@ class FifaMobile(
                     || pixel(227, 138) == -6422528) //red
         ) {
             log("mail. Collect")
-            click(943, 134)
+            clickAndWait(943, 134)
         }
 
         if (pixel(202, 57) == -44780 // mail
@@ -70,7 +77,7 @@ class FifaMobile(
             stop()
         }
 
-        if (pixel(1014, 425) == -7383297) {
+        if (pixel(994, 425) == -7383297) {
             log("sell")
             click(1014, 425)
             pause()
@@ -89,7 +96,7 @@ class FifaMobile(
                 pause(2000)
             } else if (pixel(270, 246) == -14932155) {
                 log("no card. Dragging")
-                drag(124, 564, 231, 263, 1000)
+                dragAndWait(124, 564, 231, 263, 1000)
             }
         }
 
@@ -97,20 +104,23 @@ class FifaMobile(
             log("market")
             if (pixel(31, 545) == -14932155) {
                 log("at least 1 player")
-                pause(300)
                 buy()
                 click(477, 37)
                 log("refresh")
+                while (makeScreenshot()
+                    && LocalTime.now(zoneId) < now.plusSeconds(delay.toLong() + 20)
+                ) pause(100)
                 startTelegram(msg, delay, true)
             } else if (pixel(726, 377) == -16250348) {
                 log("not found")
                 click(477, 37)
                 log("refresh")
+                while (makeScreenshot()
+                    && LocalTime.now(zoneId) < now.plusSeconds(delay.toLong() + 20)
+                ) pause(100)
                 startTelegram(msg, delay, true)
             }
         }
-
-        pause()
 
         errorsCheck()
     }
@@ -164,20 +174,18 @@ class FifaMobile(
 
     private suspend fun buyProcedure(x: Int) {
         log("shopping")
-        click(x, 510)
+        clickAndWait(x, 510)
         log("player card x:$x")
-        pause()
-        screen = getScreen()
-        exitCycle = pixel(482, 50) == -12440173
+        exitCycle = false
+        var canNext = false
         while (!exitCycle) {
-            if (pixel(215, 657) == -14024759) {
-                clicker.putLog("buy")
-                click(381, 664)
+            click(381, 664)
+            clicker.putLog("buy")
+            if (pixel(482, 50) != -12440173) {
+                canNext = true
             }
-            pause()
-            screen = getScreen()
             errorsCheck()
-            if (pixel(482, 50) == -12440173) {
+            if (canNext && pixel(482, 50) == -12440173) {
                 log("exit to market")
                 exitCycle = true
             }
@@ -185,6 +193,8 @@ class FifaMobile(
     }
 
     private suspend fun errorsCheck() {
+
+        makeScreenshot()
 
         if (pixel(364, 430) == -16743049) {
             log("service error")
@@ -195,7 +205,6 @@ class FifaMobile(
             log("main screen")
             click(37, 286)
             exitCycle = true
-            pause()
         }
 
         if (pixel(201, 93) == -44780 // popup red
@@ -227,19 +236,15 @@ class FifaMobile(
         ) {
             log("if next")
             click(1064, 681)
-            screen = getScreen()
         }
 
         if (pixel(119, 128) == -44780) {
             log("daily news")
             click(1043, 57)
-            pause()
         }
 
         if (pixel(260, 236) == -44780) {
             log("connection/bet error")
-            pause()
-            screen = getScreen()
             if (pixel(563, 288) == -16281669) {
                 log("logged in")
                 startTelegram(loginMsg, 0, false)
@@ -247,7 +252,6 @@ class FifaMobile(
                 stop()
             } else {
                 click(272, 480)
-                pause()
                 exitCycle = true
             }
         }

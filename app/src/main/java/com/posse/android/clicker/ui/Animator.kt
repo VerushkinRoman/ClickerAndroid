@@ -150,9 +150,9 @@ class Animator(private val rootView: View) {
     }
 
     companion object {
-        private const val MAX_SCALE = 3f
-        private const val MIN_SCALE = 0.33f
-        private const val SIZE = 10
+        const val MAX_SCALE = 3f
+        const val MIN_SCALE = 0.33f
+        const val SIZE = 10
         const val ANIMATION_DURATION: Long = 200
     }
 }
