@@ -4,7 +4,12 @@ import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.scripts.base.BaseScript
-import org.threeten.bp.LocalTime
+import com.posse.android.clicker.ui.Animator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 class FifaMobile(
     clicker: Clicker,
@@ -12,6 +17,8 @@ class FifaMobile(
     msg: String,
     loginMsg: String
 ) : BaseScript(clicker, script, msg, loginMsg) {
+
+    private var exitCycle = false
 
     override suspend fun run() {
         while (true) {
@@ -77,14 +84,14 @@ class FifaMobile(
             stop()
         }
 
-        if (pixel(994, 425) == -7383297) {
+        if (pixel(983, 425) == -7383297) {
             log("sell")
             click(1014, 425)
             pause()
             startTelegram(msg, delay, true)
         }
 
-        if (pixel(988, 417) == -13226157) {
+        if (pixel(983, 417) == -13226157) {
             log("didn't sold")
             if (pixel(70, 586) == -14932155 // no first player
                 && pixel(194, 581) == -14932155 // no second player
@@ -102,6 +109,7 @@ class FifaMobile(
 
         if (pixel(509, 95) == -15458241) {
             log("market")
+            startClickingFirstPlayer()
             if (pixel(31, 545) == -14932155) {
                 log("at least 1 player")
                 buy()
@@ -114,10 +122,23 @@ class FifaMobile(
                 log("refresh")
                 startTelegram(msg, delay, true)
             }
-        }
+        } else stopClickingFirstPlayer()
 
         errorsCheck()
-        checkRareErrors()
+    }
+
+    private suspend fun startClickingFirstPlayer() {
+        if (job == null) job = CoroutineScope(coroutineContext).launch {
+            while (isActive) {
+                click(323, 665)
+                pause(500)
+            }
+        }
+    }
+
+    private fun stopClickingFirstPlayer() {
+        job?.cancel("Stop clicking")
+        job = null
     }
 
     private suspend fun buy() {
@@ -160,6 +181,7 @@ class FifaMobile(
 
     private fun getRandomNumbers(capacity: Int): ArrayList<NUMBERS> {
         val result: ArrayList<NUMBERS> = ArrayList(capacity)
+        result.add(NUMBERS.One)
         while (result.size < capacity) {
             val number = NUMBERS.values()[(Math.random() * capacity).toInt()]
             if (!result.contains(number)) result.add(number)
@@ -173,18 +195,43 @@ class FifaMobile(
         log("player card x:$x")
         exitCycle = false
         var canNext = false
+        val startTime = System.currentTimeMillis()
         while (!exitCycle) {
-            click(381, 664)
-            clicker.putLog("buy")
-            if (pixel(482, 50) != -12440173) {
-                canNext = true
-            }
-            errorsCheck()
+            if (pixel(482, 50) != -12440173) canNext = true
+            connectionAndBetErrorCheck()
+            openedPlayerCardCheck()
             if (canNext && pixel(482, 50) == -12440173) {
                 log("exit to market")
                 exitCycle = true
             }
+            if (System.currentTimeMillis() > startTime + 5_000) errorsCheck()
+            if (System.currentTimeMillis() > startTime + 10_000) exitCycle = true
+            makeScreenshot()
         }
+    }
+
+    private suspend fun connectionAndBetErrorCheck(): Boolean {
+        return if (pixel(260, 236) == -44780) {
+            log("connection/bet error")
+            if (pixel(563, 288) == -16281669) {
+                log("logged in")
+                startTelegram(loginMsg, 0, false)
+                pause(5_000)
+                stop()
+                true
+            } else {
+                click(272, 480)
+                true
+            }
+        } else false
+    }
+
+    private suspend fun openedPlayerCardCheck(): Boolean {
+        return if (pixel(1039, 411) == -16318562) {
+            log("opened player card")
+            click(34, 44)
+            true
+        } else false
     }
 
     private suspend fun errorsCheck() {
@@ -205,26 +252,6 @@ class FifaMobile(
             return
         }
 
-        if (pixel(260, 236) == -44780) {
-            log("connection/bet error")
-            if (pixel(563, 288) == -16281669) {
-                log("logged in")
-                startTelegram(loginMsg, 0, false)
-                pause(5_000)
-                stop()
-            } else {
-                click(272, 480)
-                exitCycle = true
-                return
-            }
-        }
-
-        if (pixel(1039, 411) == -16318562) {
-            log("opened player card")
-            click(34, 44)
-            return
-        }
-
         if (pixel(731, 346) == -4413106 //coin
             && pixel(224, 663) == -14024759 //buy button
         ) {
@@ -233,10 +260,8 @@ class FifaMobile(
             return
         }
 
-        if (minutePassed()) checkRareErrors()
-    }
-
-    private suspend fun checkRareErrors() {
+        if (connectionAndBetErrorCheck()) return
+        if (openedPlayerCardCheck()) return
 
         if (pixel(364, 430) == -16743049) {
             log("service error")
@@ -291,6 +316,30 @@ class FifaMobile(
             return
         }
     }
+
+    private suspend fun dragAndWait(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        duration: Long,
+    ) {
+        clicker.drag(startX, startY, endX, endY, duration)
+        pause(
+            duration
+                    + Animator.ANIMATION_DURATION
+                    + Clicker.CLICK_DURATION.toLong()
+        )
+        while (!makeScreenshotWithoutPlayers()) pause(100)
+    }
+
+    private fun makeScreenshotWithoutPlayers(): Boolean {
+        log("screenshot without players")
+        oldScreen = screen
+        screen = clicker.getScreen(true)
+        return oldScreen.sameAs(screen)
+    }
+
 }
 
 enum class NUMBERS(val value: Int) {

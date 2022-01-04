@@ -11,8 +11,7 @@ import com.posse.android.clicker.ui.MainFragment
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.IOException
-import java.io.OutputStreamWriter
+import java.io.*
 
 class Clicker(
     private val msg: String,
@@ -44,6 +43,7 @@ class Clicker(
     }
 
     fun stop() {
+        coroutineScope.coroutineContext.cancelChildren()
         coroutineScope.launch { animator?.stop() }
         coroutineScope.launch { startButtonChanger.changeColor(false) }
         clickerJob?.cancel()
@@ -55,16 +55,27 @@ class Clicker(
         this.x = x
         this.y = y
         coroutineScope.launch {
-            sendCommand("input tap $x $y\n")
-            delay(500)
+            sendTouch(x,y)
             animator?.animateClick(x, y)
         }
+    }
+
+    private fun sendTouch(x: Int, y: Int) {
+        outputStream.write("$EVENT 1 330 1\n")
+        outputStream.write("$EVENT 3 53 $x\n")
+        outputStream.write("$EVENT 3 54 $y\n")
+        outputStream.write("$EVENT 0 2 0\n")
+        outputStream.write("$EVENT 0 0 0\n")
+        outputStream.write("$EVENT 0 2 0\n")
+        outputStream.write("$EVENT 0 0 0\n")
+        outputStream.flush()
     }
 
     fun recentButton() = sendCommand("input keyevent KEYCODE_APP_SWITCH\n")
 
     fun backButton() = sendCommand("input keyevent KEYCODE_BACK\n")
 
+    @Synchronized
     private fun sendCommand(command: String) {
         try {
             outputStream.write(command)
@@ -104,13 +115,16 @@ class Clicker(
         telegramJob = null
     }
 
-    fun getScreen(): Bitmap {
-        return if (animator == null) screenshot.get()
-        else screenshot.getWithHole(
-            x.toFloat(),
-            y.toFloat(),
-            Animator.SIZE * Animator.MAX_SCALE * .5f
-        )
+    fun getScreen(withoutPlayers: Boolean = false): Bitmap {
+        return when {
+            withoutPlayers -> screenshot.getWithoutPlayers()
+            animator == null -> screenshot.get()
+            else -> screenshot.getWithHole(
+                x.toFloat(),
+                y.toFloat(),
+                Animator.SIZE * Animator.MAX_SCALE
+            )
+        }
     }
 
     fun getPixelColor(screen: Bitmap, x: Int, y: Int) = screen.getPixel(x, y)
@@ -119,5 +133,6 @@ class Clicker(
 
     companion object {
         const val CLICK_DURATION = 1
+        private const val EVENT = "sendevent /dev/input/event4"
     }
 }

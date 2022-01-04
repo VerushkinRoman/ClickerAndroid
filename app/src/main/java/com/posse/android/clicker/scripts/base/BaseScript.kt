@@ -19,13 +19,11 @@ abstract class BaseScript(
     protected open val startQuietTime: LocalTime = LocalTime.of(22, 0)
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
     private val zoneId: ZoneId = ZoneId.of("+3")
-    protected var exitCycle = false
     private var now: LocalTime = LocalTime.now(zoneId)
-    private var screen: Bitmap = clicker.getScreen()
-    private var oldScreen: Bitmap = screen
+    protected var screen: Bitmap = clicker.getScreen()
+    protected var oldScreen: Bitmap = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
-    private var lastTimeChecked: Long = 0
 
     open suspend fun run() {
         pause(1)
@@ -64,22 +62,6 @@ abstract class BaseScript(
         )
     }
 
-    protected suspend fun dragAndWait(
-        startX: Int,
-        startY: Int,
-        endX: Int,
-        endY: Int,
-        duration: Long,
-    ) {
-        clicker.drag(startX, startY, endX, endY, duration)
-        pause(
-            duration
-                    + Animator.ANIMATION_DURATION
-                    + Clicker.CLICK_DURATION.toLong()
-        )
-        while (!makeScreenshot()) pause(100)
-    }
-
     protected suspend fun pause(duration: Long = 500) = delay(duration)
 
     protected fun log(message: String) = clicker.putLog(message)
@@ -91,14 +73,9 @@ abstract class BaseScript(
         return oldScreen.sameAs(screen)
     }
 
-    protected fun minutePassed(): Boolean {
-        return if (System.currentTimeMillis() > lastTimeChecked + MINUTE) {
-            lastTimeChecked = System.currentTimeMillis()
-            true
-        } else false
+    protected fun stop() {
+        clicker.stop()
     }
-
-    protected fun stop() = clicker.stop()
 
     protected fun pixel(x: Int, y: Int) = clicker.getPixelColor(screen, x, y)
 
@@ -110,9 +87,4 @@ abstract class BaseScript(
             clicker.startTelegram(msg, delay, repeat)
         }
     }
-
-    companion object {
-        private const val MINUTE = 60_000L
-    }
-
 }

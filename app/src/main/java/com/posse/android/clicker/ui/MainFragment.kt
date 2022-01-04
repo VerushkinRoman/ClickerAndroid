@@ -92,7 +92,7 @@ class MainFragment : Service() {
         clicker = Clicker(msg, loginMsg, animator, log, screenshot) { isRunning ->
             val color = if (isRunning) android.R.color.holo_green_light
             else android.R.color.darker_gray
-            binding.startButton.post {
+            screenShotScope.launch {
                 binding.startButton.setBackgroundColor(binding.root.context.getColor(color))
             }
         }
@@ -327,7 +327,7 @@ class MainFragment : Service() {
                 coordinates
                     .collectLatest { point ->
                         val picture = screenshot.get()
-                        binding.root.post {
+                        screenShotScope.launch {
                             binding.savedColor.text = picture[point.x, point.y].toString()
                             binding.savedX.text = point.x.toString()
                             binding.savedY.text = point.y.toString()
