@@ -40,8 +40,14 @@ class Screenshot(private val outputStream: OutputStreamWriter, private val proce
         val paint = Paint().apply {
             xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
         }
-        canvas.drawRect(0f, 456f, 1279f, 680f, paint)
+        canvas.drawRect(0f, 456f, 1280f, 680f, paint)
         canvas.drawRect(155f, 131f, 460f, 484f, paint)
         return result
     }
+}
+
+enum class ScreenShotType {
+    Full,
+    WithHole,
+    WithoutPlayers
 }

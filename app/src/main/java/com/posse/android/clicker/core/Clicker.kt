@@ -2,6 +2,7 @@ package com.posse.android.clicker.core
 
 import android.graphics.Bitmap
 import com.posse.android.clicker.model.MyLog
+import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.scripts.LooneyTunes
@@ -55,7 +56,7 @@ class Clicker(
         this.x = x
         this.y = y
         coroutineScope.launch {
-            sendTouch(x,y)
+            sendTouch(x, y)
             animator?.animateClick(x, y)
         }
     }
@@ -115,11 +116,11 @@ class Clicker(
         telegramJob = null
     }
 
-    fun getScreen(withoutPlayers: Boolean = false): Bitmap {
-        return when {
-            withoutPlayers -> screenshot.getWithoutPlayers()
-            animator == null -> screenshot.get()
-            else -> screenshot.getWithHole(
+    fun getScreen(screenShotType: ScreenShotType): Bitmap {
+        return when (screenShotType) {
+            ScreenShotType.WithoutPlayers -> screenshot.getWithoutPlayers()
+            ScreenShotType.Full -> screenshot.get()
+            ScreenShotType.WithHole -> screenshot.getWithHole(
                 x.toFloat(),
                 y.toFloat(),
                 Animator.SIZE * Animator.MAX_SCALE

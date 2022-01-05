@@ -3,6 +3,7 @@ package com.posse.android.clicker.scripts.base
 import android.graphics.Bitmap
 import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.ui.Animator
 import kotlinx.coroutines.*
 import org.threeten.bp.LocalTime
@@ -20,14 +21,14 @@ abstract class BaseScript(
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
     private val zoneId: ZoneId = ZoneId.of("+3")
     private var now: LocalTime = LocalTime.now(zoneId)
-    protected var screen: Bitmap = clicker.getScreen()
+    protected var screen: Bitmap = clicker.getScreen(ScreenShotType.Full)
     protected var oldScreen: Bitmap = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
 
     open suspend fun run() {
         pause(1)
-        makeScreenshot()
+        makeScreenshot(ScreenShotType.Full)
         now = LocalTime.now(zoneId)
         if (now.isAfter(startQuietTime) || now.isBefore(endQuietTime)) {
             clicker.stopTelegram()
@@ -41,10 +42,10 @@ abstract class BaseScript(
     }
 
     protected suspend fun clickAndWait(x: Int, y: Int) {
-        makeScreenshot()
+        makeScreenshot(ScreenShotType.WithHole)
         do {
             click(x, y)
-        } while (makeScreenshot())
+        } while (makeScreenshot(ScreenShotType.WithHole))
     }
 
     protected suspend fun drag(
@@ -66,10 +67,10 @@ abstract class BaseScript(
 
     protected fun log(message: String) = clicker.putLog(message)
 
-    protected fun makeScreenshot(): Boolean {
+    protected fun makeScreenshot(screenShotType: ScreenShotType): Boolean {
         log("screenshot")
         oldScreen = screen
-        screen = clicker.getScreen()
+        screen = clicker.getScreen(screenShotType)
         return oldScreen.sameAs(screen)
     }
 

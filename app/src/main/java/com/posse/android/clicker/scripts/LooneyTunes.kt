@@ -3,6 +3,7 @@ package com.posse.android.clicker.scripts
 import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.scripts.base.BaseScript
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalTime
@@ -61,7 +62,7 @@ class LooneyTunes(
             click(688, 210)
             clicked = true
             pause(2_000)
-            makeScreenshot()
+            makeScreenshot(ScreenShotType.Full)
         }
 
         if ((pixel(637, 276) == -14629121) && (pixel(640, 535) == -15045)) {
@@ -85,7 +86,7 @@ class LooneyTunes(
             pause(50_000)
             clicker.backButton()
             pause(2_000)
-            makeScreenshot()
+            makeScreenshot(ScreenShotType.Full)
         }
 
         if ((pixel(37, 48) == -513) && (pixel(47, 46) == -11711152)) {  // Left corner

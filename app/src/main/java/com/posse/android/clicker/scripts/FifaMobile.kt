@@ -3,6 +3,8 @@ package com.posse.android.clicker.scripts
 import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.model.ScreenShotType
+import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.base.BaseScript
 import com.posse.android.clicker.ui.Animator
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +52,7 @@ class FifaMobile(
                 log("Vs attack")
                 click(635, 592)
                 pause(5_000)
-                makeScreenshot()
+                makeScreenshot(ScreenShotType.Full)
             }
         }
 
@@ -204,9 +206,9 @@ class FifaMobile(
                 log("exit to market")
                 exitCycle = true
             }
-            if (System.currentTimeMillis() > startTime + 5_000) errorsCheck()
+            if (job == null || System.currentTimeMillis() > startTime + 5_000) errorsCheck()
             if (System.currentTimeMillis() > startTime + 10_000) exitCycle = true
-            makeScreenshot()
+            makeScreenshot(ScreenShotType.Full)
         }
     }
 
@@ -236,7 +238,7 @@ class FifaMobile(
 
     private suspend fun errorsCheck() {
 
-        makeScreenshot()
+        makeScreenshot(ScreenShotType.Full)
 
         if (pixel(972, 669) == -7383297) {
             log("next")
@@ -244,7 +246,7 @@ class FifaMobile(
             return
         }
 
-        if (pixel(1064, 681) == -12440173 // next
+        if (pixel(1044, 681) == -12440173 // next
             && pixel(215, 657) != -14024759 // not buy
         ) {
             log("if next")
@@ -336,7 +338,7 @@ class FifaMobile(
     private fun makeScreenshotWithoutPlayers(): Boolean {
         log("screenshot without players")
         oldScreen = screen
-        screen = clicker.getScreen(true)
+        screen = clicker.getScreen(ScreenShotType.WithoutPlayers)
         return oldScreen.sameAs(screen)
     }
 
