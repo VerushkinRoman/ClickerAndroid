@@ -17,7 +17,7 @@ class App : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@App)
-            modules(listOf(shared, myLogger, telegram, network, screenshot, root))
+            modules(listOf(shared, myLogger, telegram, network, screenshot, root, text))
         }
 
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }

@@ -2,6 +2,9 @@ package com.posse.android.clicker.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.network.ApiService
@@ -45,6 +48,10 @@ val network = module {
         httpClient.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         httpClient.build()
     }
+}
+
+val text = module {
+    single<TextRecognizer> { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 }
 
 val screenshot = module {

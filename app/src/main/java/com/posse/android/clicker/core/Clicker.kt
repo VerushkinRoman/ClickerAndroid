@@ -1,6 +1,8 @@
 package com.posse.android.clicker.core
 
-import android.graphics.Bitmap
+import android.graphics.*
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognizer
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.model.Screenshot
@@ -14,6 +16,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.*
 
+
 class Clicker(
     private val msg: String,
     private val loginMsg: String,
@@ -25,6 +28,7 @@ class Clicker(
 
     private val telegram: Telegram by inject()
     private val outputStream: OutputStreamWriter by inject()
+    private val textRecognizer: TextRecognizer by inject()
     private var clickerJob: Job? = null
     private var telegramJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -118,7 +122,6 @@ class Clicker(
 
     fun getScreen(screenShotType: ScreenShotType): Bitmap {
         return when (screenShotType) {
-            ScreenShotType.WithoutPlayers -> screenshot.getWithoutPlayers()
             ScreenShotType.Full -> screenshot.get()
             ScreenShotType.WithHole -> screenshot.getWithHole(
                 x.toFloat(),
@@ -129,6 +132,59 @@ class Clicker(
     }
 
     fun getPixelColor(screen: Bitmap, x: Int, y: Int) = screen.getPixel(x, y)
+
+    suspend fun getPrice(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int
+    ): Int {
+        val bitmap = getScreen(ScreenShotType.Full)
+        val cropImage = Bitmap.createBitmap(
+            bitmap,
+            startX,
+            startY,
+            endX - startX,
+            endY - startY
+        )
+        val image = InputImage.fromBitmap(cropImage, 0)
+        var readyResult = false
+        var result = -1
+        textRecognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                putLog("recognized text: ${visionText.text}")
+                try {
+                val string = visionText.textBlocks.first().lines.first().text.replace("\\s".toRegex(), "")
+                    result = string.toInt()
+                } catch (e: Exception) {}
+                readyResult = true
+            }
+            .addOnFailureListener { e ->
+                putLog(e.message.toString())
+                readyResult = true
+            }
+        while (!readyResult) {
+            delay(100)
+        }
+        return result
+    }
+
+    fun getPixelCount(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        color: Int
+    ): Int {
+        var result = 0
+        val screen = getScreen(ScreenShotType.Full)
+        for (x in startX..endX) {
+            for (y in startY..endY) {
+                if (screen.getPixel(x, y) == color) result++
+            }
+        }
+        return result
+    }
 
     fun putLog(message: String) = log.add(message)
 

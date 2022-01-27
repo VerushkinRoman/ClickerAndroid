@@ -3,15 +3,8 @@ package com.posse.android.clicker.scripts
 import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Script
-import com.posse.android.clicker.model.ScreenShotType
-import com.posse.android.clicker.model.Screenshot
 import com.posse.android.clicker.scripts.base.BaseScript
-import com.posse.android.clicker.ui.Animator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.delay
 
 class FifaMobile(
     clicker: Clicker,
@@ -22,331 +15,311 @@ class FifaMobile(
 
     private var exitCycle = false
 
+    private var playerNumber: Int = 1
+
     override suspend fun run() {
         while (true) {
             super.run()
             when (script) {
-                Game.Market -> marketClicking()
-                Game.EventAttack -> eventAttack()
+                Game.MarketSell -> selling()
+//                Game.MarketBuy -> buying()
+                Game.EqualGame -> attack()
+                Game.VSAttack -> attack()
 //                Game.Test -> testClicking()
             }
         }
     }
 
+    private fun buying() {
+        TODO("Not yet implemented")
+    }
+
 //    private suspend fun testClicking() {
-//        click(400, 400)
-//        pause(2000)
+
 //    }
+//        pause(2000)
+//        click(400, 400)
 
-    private suspend fun eventAttack() {
-        if (pixel(217, 126) == -2868195) {
-            log("Event main")
-            click(332, 113)
+    private suspend fun attack() {
+        delay(1_000)
+
+        if (pixel(839, 21) == -657931) {
+            log("main screen")
+            click(800, 340)
+            delay(2_000)
+            makeScreenshot()
         }
 
-        if (pixel(402, 143) == -367826) {
-            log("Day of dead")
-            if (((pixel(684, 631) == -39636) || (pixel(668, 624) == -1549272))
-                && (pixel(417, 651) != -39636)
-            ) {
-                log("Vs attack")
-                click(635, 592)
-                pause(5_000)
-                makeScreenshot(ScreenShotType.Full)
+        if (pixel(645, 212) == -7498330) {
+            log("enemy search is not accessible")
+            click(430, 310)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(521, 302) == -1137) {
+            log("lvl up")
+            click(450, 430)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(483, 263) == -5458228) {
+            log("lvl up reward")
+            click(450, 430)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(364, 273) == -628) {
+            log("vs quest")
+            click(530, 410)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(471, 202) == -4537385) {
+            log("network error: Orange")
+            click(450, 320)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(532, 215) == -13025718) {
+            log("match error")
+            click(480, 310)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(246, 176) == -4471592) {
+            log("performance error")
+            click(450, 350)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(661, 278) == -4470564) {
+            log("Division rivals")
+            if (pixel(519, 105) != -7109574) {
+                log("Waiting attack")
+                val x = when (script) {
+                    Game.EqualGame -> 490
+                    Game.VSAttack -> 290
+                    else -> throw RuntimeException("wrong script: $script")
+                }
+                click(x, 280)
+                delay(2_000)
+                makeScreenshot()
             }
         }
 
-        if ((pixel(417, 651) == -39636) || (pixel(399, 631) == -2533851)) {
-            log("Ready Play")
-            if (pixel(902, 291) == -1749997) {
-                log("Play")
-                click(1019, 631)
-                pause(120_000)
-            }
-        }
-
-        errorsCheck()
-    }
-
-
-    private suspend fun marketClicking() {
-
-        if (pixel(200, 61) == -15462074 //mail
-            && ((pixel(227, 139) == -13305319) //green
-                    || pixel(227, 138) == -6422528) //red
+        if (pixel(519, 105) == -7109574
+            && pixel(95, 434) == -1508523
         ) {
-            log("mail. Collect")
-            clickAndWait(943, 134)
-        }
-
-        if (pixel(202, 57) == -44780 // mail
-            && pixel(794, 390) == -1
-        ) { // no letters
-            log("no letters. Break")
-            stop()
-        }
-
-        if (pixel(983, 425) == -7383297) {
-            log("sell")
-            click(1014, 425)
-            pause()
-            startTelegram(msg, delay, true)
-        }
-
-        if (pixel(983, 417) == -13226157) {
-            log("didn't sold")
-            if (pixel(70, 586) == -14932155 // no first player
-                && pixel(194, 581) == -14932155 // no second player
-            ) {
-                log("no players for sell")
-                click(34, 48)
-                pause(2000)
-                click(199, 94)
-                pause(2000)
-            } else if (pixel(270, 246) == -14932155) {
-                log("no card. Dragging")
-                dragAndWait(124, 564, 231, 263, 1000)
+            log("Play")
+            startTelegram(msg, 600_000, true)
+            click(95, 434)
+            val time = when (script) {
+                Game.EqualGame -> 300_000L
+                Game.VSAttack -> 100_000L
+                else -> throw RuntimeException("wrong script: $script")
             }
+            delay(time)
+            makeScreenshot()
         }
-
-        if (pixel(509, 95) == -15458241) {
-            log("market")
-            startClickingFirstPlayer()
-            if (pixel(31, 545) == -14932155) {
-                log("at least 1 player")
-                buy()
-                click(477, 37)
-                log("refresh")
-                startTelegram(msg, delay, true)
-            } else if (pixel(726, 377) == -16250348) {
-                log("not found")
-                click(477, 37)
-                log("refresh")
-                startTelegram(msg, delay, true)
-            }
-        } else stopClickingFirstPlayer()
 
         errorsCheck()
     }
 
-    private suspend fun startClickingFirstPlayer() {
-        if (job == null) job = CoroutineScope(coroutineContext).launch {
-            while (isActive) {
-                click(323, 665)
-                pause(500)
-            }
-        }
-    }
+    private suspend fun selling() {
 
-    private fun stopClickingFirstPlayer() {
-        job?.cancel("Stop clicking")
-        job = null
-    }
-
-    private suspend fun buy() {
-        var cardsCount = 1
-        for (i in 1 until NUMBERS.values().size) {
-            if (pixel(i * 345 + 35, 554) == -14932155) {
-                cardsCount++
-            }
+        if (pixel(839, 21) == -657931) {
+            log("main screen")
+            click(484, 456)
+            delay(3_000)
+            makeScreenshot()
         }
-        val numbers: ArrayList<NUMBERS> = getRandomNumbers(cardsCount)
-        for (number in numbers) {
-            val xCard = number.value * 300
-            val xMy: Int
-            val xEnemy: Int
-            when (number) {
-                NUMBERS.One -> {
-                    xMy = 59
-                    xEnemy = 36
+
+        if (pixel(41, 77) == -320426) {
+            log("market recommended")
+            click(669, 59)
+            delay(3_000)
+            makeScreenshot()
+        }
+
+        if (pixel(736, 62) == -4984267) {
+            log("sold player")
+            click(250, 452)
+            startTelegram(SOLD, 0, false)
+            delay(3_000)
+            makeScreenshot()
+        }
+
+        if (pixel(277, 377) == -15633418) {
+            log("confirm")
+            click(277, 377)
+            delay(3_000)
+            makeScreenshot()
+        }
+
+        if (pixel(668, 78) == -320426) {
+            log("my orders")
+            val xCoordinate = 65 + 191 * (playerNumber - 1)
+            if (pixel(xCoordinate, 384) == -12823410) {
+                log("player $playerNumber")
+                val currentPrice = clicker.getPrice(xCoordinate, 350, xCoordinate + 120, 385)
+                click(659, 65)
+                delay(200)
+                click(xCoordinate, 384)
+                waitForColor(582, 298, -68737)
+                waitForLoadedPrice()
+                val minimumPrice = getLowestPrice(currentPrice)
+                startTelegram(msg, delay, true)
+                log("currentPrice $currentPrice")
+                log("minimumPrice $minimumPrice")
+                if (currentPrice != minimumPrice
+                    && minimumPrice != -1
+                    && currentPrice != -1
+                    && minimumPrice > 999
+                ) {
+                    click(627, 430)
+                    log("sell")
+                    waitForColor(710, 165, -657931)
+                    click(710, 165)
+                    log("sell")
+                } else {
+                    click(757, 37)
+                    log("close")
                 }
-                NUMBERS.Two -> {
-                    xMy = 403
-                    xEnemy = 380
-                }
-                NUMBERS.Three -> {
-                    xMy = 747
-                    xEnemy = 723
-                }
-                NUMBERS.Four -> {
-                    xMy = 1092
-                    xEnemy = 1069
-                }
-            }
-            if (pixel(xMy, 508) != -13840292 &&
-                pixel(xEnemy, 500) != -3394765
-            ) {
-                buyProcedure(xCard)
-            }
-        }
-    }
-
-    private fun getRandomNumbers(capacity: Int): ArrayList<NUMBERS> {
-        val result: ArrayList<NUMBERS> = ArrayList(capacity)
-        result.add(NUMBERS.One)
-        while (result.size < capacity) {
-            val number = NUMBERS.values()[(Math.random() * capacity).toInt()]
-            if (!result.contains(number)) result.add(number)
-        }
-        return result
-    }
-
-    private suspend fun buyProcedure(x: Int) {
-        log("shopping")
-        clickAndWait(x, 510)
-        log("player card x:$x")
-        exitCycle = false
-        var canNext = false
-        val startTime = System.currentTimeMillis()
-        while (!exitCycle) {
-            if (pixel(482, 50) != -12440173) canNext = true
-            connectionAndBetErrorCheck()
-            openedPlayerCardCheck()
-            if (canNext && pixel(482, 50) == -12440173) {
-                log("exit to market")
-                exitCycle = true
-            }
-            if (job == null || System.currentTimeMillis() > startTime + 5_000) errorsCheck()
-            if (System.currentTimeMillis() > startTime + 10_000) exitCycle = true
-            makeScreenshot(ScreenShotType.Full)
-        }
-    }
-
-    private suspend fun connectionAndBetErrorCheck(): Boolean {
-        return if (pixel(260, 236) == -44780) {
-            log("connection/bet error")
-            if (pixel(563, 288) == -16281669) {
-                log("logged in")
-                startTelegram(loginMsg, 0, false)
-                pause(5_000)
-                stop()
-                true
+                waitForColor(668, 78, -320426)
+                playerNumber++
+                if (playerNumber > PLAYERS) playerNumber = 1
             } else {
-                click(272, 480)
-                true
+                if (playerNumber == 1) {
+                    startTelegram("Все проданы", 0, false)
+                    delay(3_000)
+                    stop()
+                }
+                playerNumber = 1
             }
-        } else false
+        }
+
+        errorsCheck()
     }
 
-    private suspend fun openedPlayerCardCheck(): Boolean {
-        return if (pixel(1039, 411) == -16318562) {
-            log("opened player card")
-            click(34, 44)
-            true
-        } else false
+    private suspend fun getLowestPrice(currentPrice: Int): Int {
+        val minimumPrice = clicker.getPrice(660, 231, 790, 266)
+        return if (checkIsPriceValid(minimumPrice, currentPrice)) minimumPrice
+        else {
+            val minimumPrice2 = clicker.getPrice(650, 295, 785, 330)
+            if (checkIsPriceValid(minimumPrice2, currentPrice)) minimumPrice2
+            else -1
+        }
+    }
+
+    private fun checkIsPriceValid(price: Int, currentPrice: Int): Boolean {
+        return price > currentPrice * 0.8F && price < currentPrice * 1.2F
     }
 
     private suspend fun errorsCheck() {
 
-        makeScreenshot(ScreenShotType.Full)
+        makeScreenshot()
 
-        if (pixel(972, 669) == -7383297) {
+        if (pixel(279, 187) == -15299845    //blue
+            && pixel(380, 430) == -1574059  //yellow
+        ) {
+            log("daily login")
+            click(380, 430)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(640, 405) == -4984267) {
+            log("tap to open")
+            click(640, 405)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(734, 445) == -15633418
+            && pixel(582, 298) != -68737
+        ) {
             log("next")
-            click(972, 669)
-            return
-        }
-
-        if (pixel(1044, 681) == -12440173 // next
-            && pixel(215, 657) != -14024759 // not buy
-        ) {
-            log("if next")
-            click(1064, 681)
-            return
-        }
-
-        if (pixel(731, 346) == -4413106 //coin
-            && pixel(224, 663) == -14024759 //buy button
-        ) {
-            log("buy")
-            click(224, 663)
-            return
-        }
-
-        if (connectionAndBetErrorCheck()) return
-        if (openedPlayerCardCheck()) return
-
-        if (pixel(364, 430) == -16743049) {
-            log("service error")
-            click(205, 96)
-            return
-        }
-
-        if (pixel(37, 286) == -12440173) {
-            log("main screen")
-            click(37, 286)
+            click(734, 445)
+            delay(3_000)
             exitCycle = true
-            return
+            makeScreenshot()
         }
 
-        if (pixel(201, 93) == -44780 // popup red
-            && pixel(1043, 92) == -1 // popup close
-            && pixel(1064, 645) == -14024759 // popup cyan
-        ) {
-            log("some popup")
-            click(1043, 92)
-            return
+        if (pixel(418, 192) == -4471592) {
+            log("login conflict")
+            startTelegram(loginMsg, 0, false)
+            delay(3_000)
+            stop()
         }
 
-        if (pixel(366, 430) == -16743049) {
-            log("services error")
-            click(366, 430)
-            return
-        }
-
-        if (pixel(272, 449) == -2842294) {
-            log("league tournament")
-            click(1044, 666)
-            return
-        }
-
-        if (pixel(202, 71) == -1357032 && pixel(1067, 685) == -14024759) {
-            log("new event. confirm")
-            click(1067, 685)
-            return
-        }
-
-        if (pixel(119, 128) == -44780) {
-            log("daily news")
-            click(1043, 57)
-            return
-        }
-
-        if (pixel(244, 29) == -16335885) {
-            log("shop")
-            click(244, 29)
+        if (pixel(480, 204) == -5129779) {
+            log("content update")
+            click(450, 320)
+            delay(3_000)
             exitCycle = true
-            return
+            makeScreenshot()
+        }
+
+        if (pixel(565, 180) == -7894897) {
+            log("connection error")
+            click(415, 300)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(247, 221) == -4471592) {
+            log("connection error2")
+            click(415, 300)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(239, 202) == -4471592) {
+            log("connection error3")
+            click(450, 320)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(551, 183) == -5526352) {
+            log("maintenance")
+            click(450, 290)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
         }
     }
 
-    private suspend fun dragAndWait(
-        startX: Int,
-        startY: Int,
-        endX: Int,
-        endY: Int,
-        duration: Long,
-    ) {
-        clicker.drag(startX, startY, endX, endY, duration)
-        pause(
-            duration
-                    + Animator.ANIMATION_DURATION
-                    + Clicker.CLICK_DURATION.toLong()
-        )
-        while (!makeScreenshotWithoutPlayers()) pause(100)
+    private suspend fun waitForColor(x: Int, y: Int, color: Int) {
+        exitCycle = false
+        while (pixel(x, y) != color && !exitCycle) {
+            delay(500)
+            errorsCheck()
+        }
     }
 
-    private fun makeScreenshotWithoutPlayers(): Boolean {
-        log("screenshot without players")
-        oldScreen = screen
-        screen = clicker.getScreen(ScreenShotType.WithoutPlayers)
-        return oldScreen.sameAs(screen)
+    private suspend fun waitForLoadedPrice() {
+        exitCycle = false
+        while (clicker.getPixelCount(626, 295, 764, 320, -1) == 30 && !exitCycle) {
+            delay(500)
+            errorsCheck()
+        }
     }
 
-}
-
-enum class NUMBERS(val value: Int) {
-    One(1),
-    Two(2),
-    Three(3),
-    Four(4)
+    companion object {
+        private const val PLAYERS = 5
+        private const val SOLD = "Игрок продан"
+    }
 }

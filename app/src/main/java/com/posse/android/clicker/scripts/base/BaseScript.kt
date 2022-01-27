@@ -21,13 +21,13 @@ abstract class BaseScript(
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
     private val zoneId: ZoneId = ZoneId.of("+3")
     private var now: LocalTime = LocalTime.now(zoneId)
-    protected var screen: Bitmap = clicker.getScreen(ScreenShotType.Full)
-    protected var oldScreen: Bitmap = screen
+    private var screen: Bitmap = clicker.getScreen(ScreenShotType.Full)
+    private var oldScreen: Bitmap = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
 
     open suspend fun run() {
-        pause(1)
+        delay(1)
         makeScreenshot(ScreenShotType.Full)
         now = LocalTime.now(zoneId)
         if (now.isAfter(startQuietTime) || now.isBefore(endQuietTime)) {
@@ -37,7 +37,7 @@ abstract class BaseScript(
 
     protected suspend fun click(x: Int, y: Int) {
         clicker.click(x, y)
-        pause(Animator.ANIMATION_DURATION)
+        delay(Animator.ANIMATION_DURATION)
         log("click x:$x y:$y")
     }
 
@@ -56,18 +56,16 @@ abstract class BaseScript(
         duration: Long,
     ) {
         clicker.drag(startX, startY, endX, endY, duration)
-        pause(
+        delay(
             duration
                     + Animator.ANIMATION_DURATION
                     + Clicker.CLICK_DURATION.toLong()
         )
     }
 
-    protected suspend fun pause(duration: Long = 500) = delay(duration)
-
     protected fun log(message: String) = clicker.putLog(message)
 
-    protected fun makeScreenshot(screenShotType: ScreenShotType): Boolean {
+    protected fun makeScreenshot(screenShotType: ScreenShotType = ScreenShotType.Full): Boolean {
         log("screenshot")
         oldScreen = screen
         screen = clicker.getScreen(screenShotType)
