@@ -21,24 +21,12 @@ class FifaMobile(
         while (true) {
             super.run()
             when (script) {
-                Game.MarketSell -> selling()
-//                Game.MarketBuy -> buying()
+                Game.Market -> market()
                 Game.EqualGame -> attack()
                 Game.VSAttack -> attack()
-//                Game.Test -> testClicking()
             }
         }
     }
-
-    private fun buying() {
-        TODO("Not yet implemented")
-    }
-
-//    private suspend fun testClicking() {
-
-//    }
-//        pause(2000)
-//        click(400, 400)
 
     private suspend fun attack() {
         delay(1_000)
@@ -55,6 +43,7 @@ class FifaMobile(
             click(430, 310)
             delay(2_000)
             makeScreenshot()
+            returnToHomeScreen()
         }
 
         if (pixel(521, 302) == -1137) {
@@ -83,6 +72,7 @@ class FifaMobile(
             click(450, 320)
             delay(2_000)
             makeScreenshot()
+            returnToHomeScreen()
         }
 
         if (pixel(532, 215) == -13025718) {
@@ -90,6 +80,7 @@ class FifaMobile(
             click(480, 310)
             delay(2_000)
             makeScreenshot()
+            returnToHomeScreen()
         }
 
         if (pixel(246, 176) == -4471592) {
@@ -97,6 +88,7 @@ class FifaMobile(
             click(450, 350)
             delay(2_000)
             makeScreenshot()
+            returnToHomeScreen()
         }
 
         if (pixel(661, 278) == -4470564) {
@@ -121,7 +113,7 @@ class FifaMobile(
             startTelegram(msg, 600_000, true)
             click(95, 434)
             val time = when (script) {
-                Game.EqualGame -> 300_000L
+                Game.EqualGame -> 60_000L
                 Game.VSAttack -> 100_000L
                 else -> throw RuntimeException("wrong script: $script")
             }
@@ -132,7 +124,16 @@ class FifaMobile(
         errorsCheck()
     }
 
-    private suspend fun selling() {
+    private suspend fun returnToHomeScreen() {
+        if (pixel(944, 27) == -16777216) {
+            log("main screen")
+            click(944, 27)
+            delay(3_000)
+            makeScreenshot()
+        }
+    }
+
+    private suspend fun market() {
 
         if (pixel(839, 21) == -657931) {
             log("main screen")
@@ -167,30 +168,44 @@ class FifaMobile(
             log("my orders")
             val xCoordinate = 65 + 191 * (playerNumber - 1)
             if (pixel(xCoordinate, 384) == -12823410) {
+                startTelegram(msg, delay, true)
                 log("player $playerNumber")
                 val currentPrice = clicker.getPrice(xCoordinate, 350, xCoordinate + 120, 385)
                 click(659, 65)
                 delay(200)
                 click(xCoordinate, 384)
-                waitForColor(582, 298, -68737)
                 waitForLoadedPrice()
-                val minimumPrice = getLowestPrice(currentPrice)
-                startTelegram(msg, delay, true)
+                delay(500)
                 log("currentPrice $currentPrice")
-                log("minimumPrice $minimumPrice")
-                if (currentPrice != minimumPrice
-                    && minimumPrice != -1
-                    && currentPrice != -1
-                    && minimumPrice > 999
-                ) {
-                    click(627, 430)
-                    log("sell")
-                    waitForColor(710, 165, -657931)
-                    click(710, 165)
-                    log("sell")
+                if (checkBuy()) {
+                    val maximumPrice = getHighestPrice(currentPrice)
+                    log("maximumPrice $maximumPrice")
+                    if (currentPrice != maximumPrice
+                        && maximumPrice != -1
+                        && currentPrice != -1
+                    ) {
+                        click(627, 430)
+                        log("sell")
+                        waitForColor(710, 165, -657931)
+                    } else {
+                        click(757, 37)
+                        log("close")
+                    }
                 } else {
-                    click(757, 37)
-                    log("close")
+                    val minimumPrice = getLowestPrice(currentPrice)
+                    log("minimumPrice $minimumPrice")
+                    if (currentPrice != minimumPrice
+                        && minimumPrice != -1
+                        && currentPrice != -1
+                        && minimumPrice > 999
+                    ) {
+                        click(627, 430)
+                        log("sell")
+                        waitForColor(710, 165, -657931)
+                    } else {
+                        click(757, 37)
+                        log("close")
+                    }
                 }
                 waitForColor(668, 78, -320426)
                 playerNumber++
@@ -208,12 +223,31 @@ class FifaMobile(
         errorsCheck()
     }
 
+    private suspend fun waitForLoadedPrice() {
+        while (clicker.getPixelCount(206, 342, 418, 437, -4984267) == 0 && !exitCycle) {
+            delay(500)
+            errorsCheck()
+        }
+    }
+
+    private fun checkBuy() = clicker.getPixelCount(615, 91, 764, 164, -2813390) > 0
+
     private suspend fun getLowestPrice(currentPrice: Int): Int {
         val minimumPrice = clicker.getPrice(660, 231, 790, 266)
         return if (checkIsPriceValid(minimumPrice, currentPrice)) minimumPrice
         else {
             val minimumPrice2 = clicker.getPrice(650, 295, 785, 330)
             if (checkIsPriceValid(minimumPrice2, currentPrice)) minimumPrice2
+            else -1
+        }
+    }
+
+    private suspend fun getHighestPrice(currentPrice: Int): Int {
+        val maximumPrice = clicker.getPrice(660, 266, 790, 301)
+        return if (checkIsPriceValid(maximumPrice, currentPrice)) maximumPrice
+        else {
+            val maximumPrice2 = clicker.getPrice(650, 295, 785, 330)
+            if (checkIsPriceValid(maximumPrice2, currentPrice)) maximumPrice2
             else -1
         }
     }
@@ -245,7 +279,7 @@ class FifaMobile(
         }
 
         if (pixel(734, 445) == -15633418
-            && pixel(582, 298) != -68737
+            && pixel(433, 452) != -12955515
         ) {
             log("next")
             click(734, 445)
@@ -293,10 +327,35 @@ class FifaMobile(
             makeScreenshot()
         }
 
+        if (pixel(475, 191) == -5985089) {
+            log("unknown error")
+            click(475, 335)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
         if (pixel(551, 183) == -5526352) {
             log("maintenance")
             click(450, 290)
             delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(710, 165) == -657931) {
+            log("bet taken")
+            click(710, 165)
+            delay(1_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+
+        if (pixel(234, 302) == -12823411 && pixel(722, 302) == -12823411) {
+            log("big button in senter")
+            click(481, 309)
+            delay(1_000)
             exitCycle = true
             makeScreenshot()
         }
@@ -305,14 +364,6 @@ class FifaMobile(
     private suspend fun waitForColor(x: Int, y: Int, color: Int) {
         exitCycle = false
         while (pixel(x, y) != color && !exitCycle) {
-            delay(500)
-            errorsCheck()
-        }
-    }
-
-    private suspend fun waitForLoadedPrice() {
-        exitCycle = false
-        while (clicker.getPixelCount(626, 295, 764, 320, -1) == 30 && !exitCycle) {
             delay(500)
             errorsCheck()
         }

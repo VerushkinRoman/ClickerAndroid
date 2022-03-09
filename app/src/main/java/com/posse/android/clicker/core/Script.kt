@@ -9,16 +9,9 @@ interface Script {
 
 enum class Game : Script {
 
-    MarketSell {
+    Market {
         override val game: Games = Games.FifaMobile
-        override val script: String = "Market sell"
-        override val width: Int = 960
-        override val height: Int = 480
-    },
-
-    MarketBuy {
-        override val game: Games = Games.FifaMobile
-        override val script: String = "Market buy"
+        override val script: String = "Market"
         override val width: Int = 960
         override val height: Int = 480
     },
@@ -43,13 +36,6 @@ enum class Game : Script {
         override val width: Int = 1280
         override val height: Int = 720
     },
-
-//    Test {
-//        override val game: Games = Games.FifaMobile
-//        override val script: String = "Test"
-//        override val width: Int = 1280
-//        override val height: Int = 720
-//    }
 }
 
 enum class Games(val naming: String) {

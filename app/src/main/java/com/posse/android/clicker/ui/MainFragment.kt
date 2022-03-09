@@ -63,7 +63,7 @@ class MainFragment : Service() {
     private var touchConsumedByMove = false
     private var lasTimeExpandTouched = System.currentTimeMillis()
 
-    private var script: Script = Game.MarketSell
+    private var script: Script = Game.Market
     private val adapter: MainAdapter = MainAdapter()
 
     private var defaultButton: ButtonDimens? = null
