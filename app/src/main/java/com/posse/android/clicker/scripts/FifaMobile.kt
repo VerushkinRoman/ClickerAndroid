@@ -1,17 +1,16 @@
 package com.posse.android.clicker.scripts
 
 import com.posse.android.clicker.core.Clicker
-import com.posse.android.clicker.core.Game
-import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.core.FifaGameScript
 import com.posse.android.clicker.scripts.base.BaseScript
 import kotlinx.coroutines.delay
 
 class FifaMobile(
     clicker: Clicker,
-    script: Script,
+    private val script: FifaGameScript,
     msg: String,
     loginMsg: String
-) : BaseScript(clicker, script, msg, loginMsg) {
+) : BaseScript(clicker, msg, loginMsg) {
 
     private var exitCycle = false
 
@@ -21,22 +20,15 @@ class FifaMobile(
         while (true) {
             super.run()
             when (script) {
-                Game.Market -> market()
-                Game.EqualGame -> attack()
-                Game.VSAttack -> attack()
+                FifaGameScript.Market -> market()
+                FifaGameScript.EqualGame -> attack()
+                FifaGameScript.VSAttack -> attack()
             }
         }
     }
 
     private suspend fun attack() {
         delay(1_000)
-
-        if (pixel(839, 21) == -657931) {
-            log("main screen")
-            click(800, 340)
-            delay(2_000)
-            makeScreenshot()
-        }
 
         if (pixel(645, 212) == -7498330) {
             log("enemy search is not accessible")
@@ -96,8 +88,8 @@ class FifaMobile(
             if (pixel(519, 105) != -7109574) {
                 log("Waiting attack")
                 val x = when (script) {
-                    Game.EqualGame -> 490
-                    Game.VSAttack -> 290
+                    FifaGameScript.EqualGame -> 490
+                    FifaGameScript.VSAttack -> 290
                     else -> throw RuntimeException("wrong script: $script")
                 }
                 click(x, 280)
@@ -110,11 +102,11 @@ class FifaMobile(
             && pixel(95, 434) == -1508523
         ) {
             log("Play")
-            startTelegram(msg, 600_000, true)
+            startTelegram(msg, delay, true)
             click(95, 434)
             val time = when (script) {
-                Game.EqualGame -> 60_000L
-                Game.VSAttack -> 100_000L
+                FifaGameScript.EqualGame -> 60_000L
+                FifaGameScript.VSAttack -> 100_000L
                 else -> throw RuntimeException("wrong script: $script")
             }
             delay(time)
@@ -134,13 +126,6 @@ class FifaMobile(
     }
 
     private suspend fun market() {
-
-        if (pixel(839, 21) == -657931) {
-            log("main screen")
-            click(484, 456)
-            delay(3_000)
-            makeScreenshot()
-        }
 
         if (pixel(41, 77) == -320426) {
             log("market recommended")
@@ -187,10 +172,10 @@ class FifaMobile(
                         click(627, 430)
                         log("sell")
                         waitForColor(710, 165, -657931)
-                    } else {
-                        click(757, 37)
-                        log("close")
+                        delay(1000)
                     }
+                    click(757, 37)
+                    log("close")
                 } else {
                     val minimumPrice = getLowestPrice(currentPrice)
                     log("minimumPrice $minimumPrice")
@@ -259,6 +244,15 @@ class FifaMobile(
     private suspend fun errorsCheck() {
 
         makeScreenshot()
+
+        if (pixel(839, 21) == -657931) {
+            log("main screen")
+            if (script == FifaGameScript.Market) click(484, 456)
+            else click(800, 340)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
 
         if (pixel(279, 187) == -15299845    //blue
             && pixel(380, 430) == -1574059  //yellow
@@ -356,6 +350,14 @@ class FifaMobile(
             log("big button in senter")
             click(481, 309)
             delay(1_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(118, 243) == -11082345) {
+            log("emulator main screen")
+            click(122, 144)
+            delay(30_000)
             exitCycle = true
             makeScreenshot()
         }

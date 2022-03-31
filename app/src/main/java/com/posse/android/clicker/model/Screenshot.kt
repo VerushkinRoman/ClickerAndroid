@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter
 
 class Screenshot(private val outputStream: OutputStreamWriter, private val process: Process) {
 
-    fun get(): Bitmap {
+    fun get(): Bitmap? {
         return runBlocking(Dispatchers.Default) {
             try {
                 outputStream.write("/system/bin/screencap -p\n")
@@ -20,12 +20,12 @@ class Screenshot(private val outputStream: OutputStreamWriter, private val proce
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-            throw RuntimeException("Screenshot error")
+            return@runBlocking null
         }
     }
 
-    fun getWithHole(cx: Float, cy: Float, radius: Float): Bitmap {
-        val result = get()
+    fun getWithHole(cx: Float, cy: Float, radius: Float): Bitmap? {
+        val result = get() ?: return null
         val canvas = Canvas(result)
         val paint = Paint().apply {
             xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)

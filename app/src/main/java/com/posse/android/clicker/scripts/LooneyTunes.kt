@@ -1,8 +1,7 @@
 package com.posse.android.clicker.scripts
 
 import com.posse.android.clicker.core.Clicker
-import com.posse.android.clicker.core.Game
-import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.core.LooneyGameScript
 import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.scripts.base.BaseScript
 import kotlinx.coroutines.delay
@@ -11,21 +10,21 @@ import org.threeten.bp.LocalTime
 
 class LooneyTunes(
     clicker: Clicker,
-    script: Script,
+    private val script: LooneyGameScript,
     msg: String,
     loginMsg: String
-) : BaseScript(clicker, script, msg, loginMsg) {
+) : BaseScript(clicker, msg, loginMsg) {
 
     override val startQuietTime: LocalTime = LocalTime.of(23, 59)
     override val endQuietTime: LocalTime = LocalTime.of(8, 0)
 
     override suspend fun run() {
-            while (true) {
-                super.run()
-                when (script) {
-                    Game.Ads -> looneyClicking()
-                }
+        while (true) {
+            super.run()
+            when (script) {
+                LooneyGameScript.Ads -> looneyClicking()
             }
+        }
     }
 
     private suspend fun looneyClicking() {

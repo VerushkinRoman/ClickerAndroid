@@ -2,7 +2,6 @@ package com.posse.android.clicker.scripts.base
 
 import android.graphics.Bitmap
 import com.posse.android.clicker.core.Clicker
-import com.posse.android.clicker.core.Script
 import com.posse.android.clicker.model.ScreenShotType
 import com.posse.android.clicker.ui.Animator
 import kotlinx.coroutines.*
@@ -11,7 +10,6 @@ import org.threeten.bp.ZoneId
 
 abstract class BaseScript(
     protected val clicker: Clicker,
-    protected val script: Script,
     protected val msg: String,
     protected val loginMsg: String
 ) {
@@ -21,8 +19,8 @@ abstract class BaseScript(
     protected open val endQuietTime: LocalTime = LocalTime.of(8, 0)
     private val zoneId: ZoneId = ZoneId.of("+3")
     private var now: LocalTime = LocalTime.now(zoneId)
-    private var screen: Bitmap = clicker.getScreen(ScreenShotType.Full)
-    private var oldScreen: Bitmap = screen
+    private var screen: Bitmap? = clicker.getScreen(ScreenShotType.Full)
+    private var oldScreen: Bitmap? = screen
     protected val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     protected var job: Job? = null
 
@@ -69,7 +67,9 @@ abstract class BaseScript(
         log("screenshot")
         oldScreen = screen
         screen = clicker.getScreen(screenShotType)
-        return oldScreen.sameAs(screen)
+        return screen?.let {
+            return@let oldScreen?.sameAs(it)
+        } ?: false
     }
 
     protected fun stop() {

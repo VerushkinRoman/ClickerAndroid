@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.PixelFormat
+import android.graphics.Point
 import android.os.Build
 import android.os.IBinder
 import android.view.*
@@ -17,8 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.button.MaterialButton
 import com.posse.android.clicker.R
 import com.posse.android.clicker.core.Clicker
-import com.posse.android.clicker.core.Game
-import com.posse.android.clicker.core.Script
+import com.posse.android.clicker.core.FifaGameScript
+import com.posse.android.clicker.core.Games
+import com.posse.android.clicker.core.ScriptProps
 import com.posse.android.clicker.databinding.FragmentMainBinding
 import com.posse.android.clicker.model.MyLog
 import com.posse.android.clicker.model.Screenshot
@@ -26,7 +28,6 @@ import com.posse.android.clicker.ui.adapter.MainAdapter
 import com.posse.android.clicker.utils.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.android.ext.android.inject
 import kotlin.math.abs
@@ -48,7 +49,7 @@ class MainFragment : Service() {
     private lateinit var backgroundLayoutParams: WindowManager.LayoutParams
     private lateinit var backgroundView: BackgroundView
     private lateinit var coordinates: StateFlow<BackgroundView.Point>
-    private val screenShotScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val mainScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
@@ -63,7 +64,7 @@ class MainFragment : Service() {
     private var touchConsumedByMove = false
     private var lasTimeExpandTouched = System.currentTimeMillis()
 
-    private var script: Script = Game.Market
+    private var script: ScriptProps = FifaGameScript.VSAttack
     private val adapter: MainAdapter = MainAdapter()
 
     private var defaultButton: ButtonDimens? = null
@@ -92,7 +93,7 @@ class MainFragment : Service() {
         clicker = Clicker(msg, loginMsg, animator, log, screenshot) { isRunning ->
             val color = if (isRunning) android.R.color.holo_green_light
             else android.R.color.darker_gray
-            screenShotScope.launch {
+            mainScope.launch {
                 binding.startButton.setBackgroundColor(binding.root.context.getColor(color))
             }
         }
@@ -113,6 +114,7 @@ class MainFragment : Service() {
             format = PixelFormat.TRANSLUCENT
             flags =
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            @Suppress("DEPRECATION")
             type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else WindowManager.LayoutParams.TYPE_PHONE
@@ -280,6 +282,7 @@ class MainFragment : Service() {
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            @Suppress("DEPRECATION")
             type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else WindowManager.LayoutParams.TYPE_PHONE
@@ -291,21 +294,12 @@ class MainFragment : Service() {
         }
     }
 
-    private fun initStopButton() {
-        binding.stopButton.setOnClickListener {
-            clicker?.stop()
-        }
-    }
+    private fun initStopButton() = binding.stopButton.setOnClickListener { clicker?.stop() }
 
-    private fun initStartButton() {
-        binding.startButton.setOnClickListener {
-            clicker?.start(script)
-        }
-    }
+    private fun initStartButton() = binding.startButton
+        .setOnClickListener { clicker?.start(script) }
 
-    private fun initCloseButton() {
-        binding.closeButton.setOnClickListener { dismiss() }
-    }
+    private fun initCloseButton() = binding.closeButton.setOnClickListener { dismiss() }
 
     private fun initEditorButton() {
         coordinates = backgroundView.getData()
@@ -323,11 +317,11 @@ class MainFragment : Service() {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.MATCH_PARENT
             }
-            screenShotScope.launch {
+            mainScope.launch {
                 coordinates
                     .collectLatest { point ->
-                        val picture = screenshot.get()
-                        screenShotScope.launch {
+                        val picture = screenshot.get() ?: return@collectLatest
+                        mainScope.launch {
                             binding.savedColor.text = picture[point.x, point.y].toString()
                             binding.savedX.text = point.x.toString()
                             binding.savedY.text = point.y.toString()
@@ -342,7 +336,7 @@ class MainFragment : Service() {
                 width = WindowManager.LayoutParams.WRAP_CONTENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
             }
-            screenShotScope.coroutineContext.cancelChildren()
+            mainScope.coroutineContext.cancelChildren()
         }
 
         windowManager?.apply {
@@ -367,7 +361,7 @@ class MainFragment : Service() {
     }
 
     private fun initLog() {
-        CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
+        mainScope.launch {
             log.get().collect {
                 adapter.add(it)
                 binding.logRecyclerView.scrollToPosition(adapter.itemCount - 1)
@@ -376,39 +370,66 @@ class MainFragment : Service() {
     }
 
     private fun initMenu() {
+
         val menuItems: MutableList<String> = mutableListOf()
-        Game.values().forEach { game ->
-            if (game.game.naming == preferences.lastSelectedGame) menuItems.add(game.script)
-        }
+
+        val currentGame =
+            Games.values().find { it.gameName == preferences.lastSelectedGame } ?: return
+
+        val screenResolution = getScreenResolution()
+
+        val actualScripts = currentGame.gameScripts
+            .filter { screenResolution.containsAll(listOf(it.width, it.height)) }
+
+        actualScripts.forEach { menuItems.add(it.scriptName) }
+
+        val currentScript = actualScripts.find { it.scriptName == preferences.lastScript }
+            ?: currentGame.gameScripts.find {
+                screenResolution.containsAll(listOf(it.width, it.height))
+            } ?: return
+
+        preferences.lastScript = currentScript.scriptName
+
+        script = currentScript
+
         val adapter = ArrayAdapter(this, R.layout.list_item, menuItems)
         (binding.chooseLayout.editText as? AutoCompleteTextView)?.setAdapter(adapter)
-        if (!menuItems.contains(preferences.lastScript)) preferences.lastScript = menuItems.first()
-        binding.script.setText(preferences.lastScript, false)
+
+        binding.script.setText(currentScript.scriptName, false)
+
         binding.script.setOnItemClickListener { _, _, position, _ ->
             val element = adapter.getItem(position)
-            Game.values().forEach { game ->
-                if (game.script == element) script = game
+            actualScripts.find { it.scriptName == element }?.let {
+                script = it
+                preferences.lastScript = it.scriptName
             }
         }
     }
 
+    @Suppress("DEPRECATION")
+    private fun getScreenResolution(): List<Int> {
+        val size = Point()
+        val display = windowManager?.defaultDisplay
+        display?.getSize(size)
+        val width: Int = size.x
+        val height: Int = size.y
+        return listOf(width, height)
+    }
+
     private fun dismiss() {
-        screenShotScope.coroutineContext.cancelChildren()
+        mainScope.coroutineContext.cancelChildren()
         exitProcess(0)
     }
 
     override fun onDestroy() {
-        screenShotScope.coroutineContext.cancelChildren()
+        mainScope.coroutineContext.cancelChildren()
+        _binding = null
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        return START_NOT_STICKY
-    }
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int = START_NOT_STICKY
 
     data class ButtonDimens(
         val minWidth: Int,

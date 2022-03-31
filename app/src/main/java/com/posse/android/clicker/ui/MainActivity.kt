@@ -13,7 +13,6 @@ import android.widget.AutoCompleteTextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.posse.android.clicker.R
-import com.posse.android.clicker.core.Game
 import com.posse.android.clicker.core.Games
 import com.posse.android.clicker.databinding.ActivityMainBinding
 import com.posse.android.clicker.utils.lastSelectedGame
@@ -53,13 +52,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initGameSelector() {
-        Games.values().forEach { game -> menuItems.add(game.naming) }
+        menuItems.addAll(Games.values().map { it.gameName })
         val adapter = ArrayAdapter(this, R.layout.list_item, menuItems)
         (binding.gameLayout.editText as? AutoCompleteTextView)?.setAdapter(adapter)
-        if (preferences.lastSelectedGame == null) preferences.lastSelectedGame = menuItems.first()
-        binding.game.setText(preferences.lastSelectedGame, false)
+        val currentGame = Games.values().find { it.gameName == preferences.lastSelectedGame }
+        val adapterText = currentGame?.gameName ?: getString(R.string.choose_game)
+        binding.game.setText(adapterText, false)
         binding.game.setOnItemClickListener { _, _, position, _ ->
             preferences.lastSelectedGame = adapter.getItem(position)
+            checkScreenResolution()
         }
     }
 
@@ -112,7 +113,6 @@ class MainActivity : AppCompatActivity() {
             && permissions.screenResolution
             && permissions.root
         ) {
-            binding.runButton.isEnabled = true
             binding.runButton.setOnClickListener {
                 showMainFragment()
                 finish()
@@ -120,16 +120,16 @@ class MainActivity : AppCompatActivity() {
         } else binding.runButton.isEnabled = false
     }
 
-    private fun initOverlayButton() {
-        if (Settings.canDrawOverlays(this)) {
-            binding.overlayButton.isEnabled = false
-            binding.overlayText.text = getString(R.string.overlay_granted)
+    private fun initOverlayButton() = with(binding) {
+        if (Settings.canDrawOverlays(this@MainActivity)) {
+            overlayButton.isEnabled = false
+            overlayText.text = getString(R.string.overlay_granted)
             permissions.overlay = true
         } else {
-            binding.overlayButton.isEnabled = true
-            binding.overlayText.text = getString(R.string.overlay_not_granted)
+            overlayButton.isEnabled = true
+            overlayText.text = getString(R.string.overlay_not_granted)
             permissions.overlay = false
-            binding.overlayButton.setOnClickListener {
+            overlayButton.setOnClickListener {
                 startManageDrawOverlaysPermission()
             }
         }
@@ -141,21 +141,25 @@ class MainActivity : AppCompatActivity() {
         initButtons()
     }
 
+    @Suppress("DEPRECATION")
     private fun checkScreenResolution(): Boolean {
         binding.runText.visibility = View.VISIBLE
+        binding.runButton.isEnabled = false
+        permissions.screenResolution = false
         val size = Point()
         val display = windowManager.defaultDisplay
         display.getSize(size)
         val width: Int = size.x
         val height: Int = size.y
+        val resolutions = listOf(width, height)
 
-        Game.values().forEach { game ->
-            if (
-                game.game.naming == binding.game.text.toString()
-                && (game.height == height || game.height == width)
-                && (game.width == width || game.width == height)
-            ) {
-                binding.runText.visibility = View.GONE
+        val currentSelectedGame =
+            Games.values().find { it.gameName == preferences.lastSelectedGame } ?: return false
+
+        currentSelectedGame.gameScripts.forEach { gameScript ->
+            if (resolutions.containsAll(listOf(gameScript.width, gameScript.height))) {
+                binding.runText.visibility = View.INVISIBLE
+                binding.runButton.isEnabled = true
                 permissions.screenResolution = true
                 return true
             }

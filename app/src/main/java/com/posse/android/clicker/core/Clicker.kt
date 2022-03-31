@@ -1,6 +1,6 @@
 package com.posse.android.clicker.core
 
-import android.graphics.*
+import android.graphics.Bitmap
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognizer
 import com.posse.android.clicker.model.MyLog
@@ -14,7 +14,8 @@ import com.posse.android.clicker.ui.MainFragment
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.*
+import java.io.IOException
+import java.io.OutputStreamWriter
 
 
 class Clicker(
@@ -35,13 +36,24 @@ class Clicker(
     private var x: Int = 0
     private var y: Int = 0
 
-    fun start(script: Script) {
+    fun start(script: ScriptProps) {
         if (clickerJob == null) {
             startButtonChanger.changeColor(true)
             clickerJob = coroutineScope.launch {
-                when (script.game) {
-                    Games.FifaMobile -> FifaMobile(this@Clicker, script, msg, loginMsg).run()
-                    Games.LooneyTunes -> LooneyTunes(this@Clicker, script, msg, loginMsg).run()
+                when (Games.values().find { it.gameScripts.contains(script) }) {
+                    Games.FifaMobile -> FifaMobile(
+                        clicker = this@Clicker,
+                        script = script as FifaGameScript,
+                        msg = msg,
+                        loginMsg = loginMsg
+                    ).run()
+                    Games.LooneyTunes -> LooneyTunes(
+                        clicker = this@Clicker,
+                        script = script as LooneyGameScript,
+                        msg = msg,
+                        loginMsg = loginMsg
+                    ).run()
+                    else -> throw RuntimeException("Unknown Script: ${script.scriptName}")
                 }
             }
         }
@@ -49,8 +61,8 @@ class Clicker(
 
     fun stop() {
         coroutineScope.coroutineContext.cancelChildren()
-        coroutineScope.launch { animator?.stop() }
-        coroutineScope.launch { startButtonChanger.changeColor(false) }
+        animator?.stop()
+        startButtonChanger.changeColor(false)
         clickerJob?.cancel()
         clickerJob = null
         stopTelegram()
@@ -59,21 +71,24 @@ class Clicker(
     fun click(x: Int, y: Int) {
         this.x = x
         this.y = y
+        animator?.animateClick(x, y)
         coroutineScope.launch {
             sendTouch(x, y)
-            animator?.animateClick(x, y)
         }
     }
 
-    private fun sendTouch(x: Int, y: Int) {
-        outputStream.write("$EVENT 1 330 1\n")
-        outputStream.write("$EVENT 3 53 $x\n")
-        outputStream.write("$EVENT 3 54 $y\n")
-        outputStream.write("$EVENT 0 2 0\n")
-        outputStream.write("$EVENT 0 0 0\n")
-        outputStream.write("$EVENT 0 2 0\n")
-        outputStream.write("$EVENT 0 0 0\n")
-        outputStream.flush()
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun sendTouch(x: Int, y: Int) {
+        withContext(Dispatchers.IO) {
+            outputStream.write("$EVENT 1 330 1\n")
+            outputStream.write("$EVENT 3 53 $x\n")
+            outputStream.write("$EVENT 3 54 $y\n")
+            outputStream.write("$EVENT 0 2 0\n")
+            outputStream.write("$EVENT 0 0 0\n")
+            outputStream.write("$EVENT 0 2 0\n")
+            outputStream.write("$EVENT 0 0 0\n")
+            outputStream.flush()
+        }
     }
 
     fun recentButton() = sendCommand("input keyevent KEYCODE_APP_SWITCH\n")
@@ -120,7 +135,7 @@ class Clicker(
         telegramJob = null
     }
 
-    fun getScreen(screenShotType: ScreenShotType): Bitmap {
+    fun getScreen(screenShotType: ScreenShotType): Bitmap? {
         return when (screenShotType) {
             ScreenShotType.Full -> screenshot.get()
             ScreenShotType.WithHole -> screenshot.getWithHole(
@@ -131,7 +146,7 @@ class Clicker(
         }
     }
 
-    fun getPixelColor(screen: Bitmap, x: Int, y: Int) = screen.getPixel(x, y)
+    fun getPixelColor(screen: Bitmap?, x: Int, y: Int) = screen?.getPixel(x, y)
 
     suspend fun getPrice(
         startX: Int,
@@ -139,7 +154,8 @@ class Clicker(
         endX: Int,
         endY: Int
     ): Int {
-        val bitmap = getScreen(ScreenShotType.Full)
+        var result = -1
+        val bitmap = getScreen(ScreenShotType.Full) ?: return result
         val cropImage = Bitmap.createBitmap(
             bitmap,
             startX,
@@ -149,14 +165,17 @@ class Clicker(
         )
         val image = InputImage.fromBitmap(cropImage, 0)
         var readyResult = false
-        var result = -1
         textRecognizer.process(image)
             .addOnSuccessListener { visionText ->
                 putLog("recognized text: ${visionText.text}")
                 try {
-                val string = visionText.textBlocks.first().lines.first().text.replace("\\s".toRegex(), "")
+                    val string = visionText.textBlocks.first().lines.first().text.replace(
+                        "\\s".toRegex(),
+                        ""
+                    )
                     result = string.toInt()
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                }
                 readyResult = true
             }
             .addOnFailureListener { e ->
@@ -177,7 +196,7 @@ class Clicker(
         color: Int
     ): Int {
         var result = 0
-        val screen = getScreen(ScreenShotType.Full)
+        val screen = getScreen(ScreenShotType.Full) ?: return result
         for (x in startX..endX) {
             for (y in startY..endY) {
                 if (screen.getPixel(x, y) == color) result++
