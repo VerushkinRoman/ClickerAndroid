@@ -10,13 +10,13 @@ import com.posse.android.clicker.scripts.FifaMobile
 import com.posse.android.clicker.scripts.LooneyTunes
 import com.posse.android.clicker.telegram.Telegram
 import com.posse.android.clicker.ui.Animator
+import com.posse.android.clicker.ui.Animator.Companion.ANIMATION_DURATION
 import com.posse.android.clicker.ui.MainFragment
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
 import java.io.OutputStreamWriter
-
 
 class Clicker(
     private val msg: String,
@@ -68,13 +68,12 @@ class Clicker(
         stopTelegram()
     }
 
-    fun click(x: Int, y: Int) {
+    suspend fun click(x: Int, y: Int) {
         this.x = x
         this.y = y
         animator?.animateClick(x, y)
-        coroutineScope.launch {
-            sendTouch(x, y)
-        }
+        sendTouch(x, y)
+        delay(ANIMATION_DURATION * 2)
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -101,22 +100,21 @@ class Clicker(
             outputStream.write(command)
             outputStream.flush()
         } catch (e: IOException) {
-            log.add(e.toString())
+            putLog(e.toString())
         }
     }
 
-    fun drag(
+    suspend fun drag(
         startX: Int,
         startY: Int,
         endX: Int,
         endY: Int,
         duration: Long
     ) {
-        coroutineScope.launch {
-            sendCommand("input swipe $startX $startY $endX $endY $duration\n")
-            delay(400)
-            animator?.animateDrag(startX, startY, endX, endY, duration)
-        }
+        sendCommand("input swipe $startX $startY $endX $endY $duration\n")
+        delay(400)
+        animator?.animateDrag(startX, startY, endX, endY, duration)
+        delay(duration + ANIMATION_DURATION * 2)
     }
 
     fun startTelegram(msg: String, delay: Int, repeat: Boolean) {
@@ -175,6 +173,7 @@ class Clicker(
                     )
                     result = string.toInt()
                 } catch (e: Exception) {
+                    e.message?.let { putLog(it) }
                 }
                 readyResult = true
             }
@@ -196,7 +195,7 @@ class Clicker(
         color: Int
     ): Int {
         var result = 0
-        val screen = getScreen(ScreenShotType.Full) ?: return result
+        val screen = getScreen(ScreenShotType.Full) ?: return 0
         for (x in startX..endX) {
             for (y in startY..endY) {
                 if (screen.getPixel(x, y) == color) result++
@@ -205,7 +204,7 @@ class Clicker(
         return result
     }
 
-    fun putLog(message: String) = log.add(message)
+    fun putLog(message: String) = coroutineScope.launch { log.add(message) }
 
     companion object {
         const val CLICK_DURATION = 1

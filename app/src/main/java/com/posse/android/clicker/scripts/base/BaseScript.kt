@@ -3,7 +3,6 @@ package com.posse.android.clicker.scripts.base
 import android.graphics.Bitmap
 import com.posse.android.clicker.core.Clicker
 import com.posse.android.clicker.model.ScreenShotType
-import com.posse.android.clicker.ui.Animator
 import kotlinx.coroutines.*
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
@@ -35,7 +34,6 @@ abstract class BaseScript(
 
     protected suspend fun click(x: Int, y: Int) {
         clicker.click(x, y)
-        delay(Animator.ANIMATION_DURATION)
         log("click x:$x y:$y")
     }
 
@@ -54,11 +52,6 @@ abstract class BaseScript(
         duration: Long,
     ) {
         clicker.drag(startX, startY, endX, endY, duration)
-        delay(
-            duration
-                    + Animator.ANIMATION_DURATION
-                    + Clicker.CLICK_DURATION.toLong()
-        )
     }
 
     protected fun log(message: String) = clicker.putLog(message)

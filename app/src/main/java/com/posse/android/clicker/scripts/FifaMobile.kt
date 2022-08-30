@@ -30,7 +30,10 @@ class FifaMobile(
     private suspend fun attack() {
         delay(1_000)
 
-        if (pixel(645, 212) == -7498330) {
+        if (
+            pixel(645, 212) == -7498330
+            || pixel(675, 211) == -4471592
+        ) {
             log("enemy search is not accessible")
             click(430, 310)
             delay(2_000)
@@ -45,8 +48,20 @@ class FifaMobile(
             makeScreenshot()
         }
 
-        if (pixel(483, 263) == -5458228) {
-            log("lvl up reward")
+        if (pixel(483, 263) == -5458228
+            || pixel(483, 263) == -5589814
+        ) {
+            log("division up reward")
+            click(450, 430)
+            delay(2_000)
+            makeScreenshot()
+        }
+
+        if (pixel(530, 428) == -15633418
+            && pixel(634, 428) != -15633418
+            && pixel(324, 428) != -15633418
+        ) {
+            log("division down")
             click(450, 430)
             delay(2_000)
             makeScreenshot()
@@ -67,7 +82,9 @@ class FifaMobile(
             returnToHomeScreen()
         }
 
-        if (pixel(532, 215) == -13025718) {
+        if (pixel(532, 215) == -13025718
+            || pixel(533, 215) == -6116675
+        ) {
             log("match error")
             click(480, 310)
             delay(2_000)
@@ -83,13 +100,13 @@ class FifaMobile(
             returnToHomeScreen()
         }
 
-        if (pixel(661, 278) == -4470564) {
+        if (pixel(754, 279) == -4470564) {
             log("Division rivals")
             if (pixel(519, 105) != -7109574) {
                 log("Waiting attack")
                 val x = when (script) {
-                    FifaGameScript.EqualGame -> 490
-                    FifaGameScript.VSAttack -> 290
+                    FifaGameScript.EqualGame -> 390
+                    FifaGameScript.VSAttack -> 190
                     else -> throw RuntimeException("wrong script: $script")
                 }
                 click(x, 280)
@@ -98,8 +115,8 @@ class FifaMobile(
             }
         }
 
-        if (pixel(519, 105) == -7109574
-            && pixel(95, 434) == -1508523
+        if (pixel(519, 105) == -2103
+            && pixel(96, 434) == -1836204
         ) {
             log("Play")
             startTelegram(msg, delay, true)
@@ -152,7 +169,9 @@ class FifaMobile(
         if (pixel(668, 78) == -320426) {
             log("my orders")
             val xCoordinate = 65 + 191 * (playerNumber - 1)
-            if (pixel(xCoordinate, 384) == -12823410) {
+            if (pixel(xCoordinate, 384) == -12823410
+                || pixel(xCoordinate, 384) == -14401919
+            ) {
                 startTelegram(msg, delay, true)
                 log("player $playerNumber")
                 val currentPrice = clicker.getPrice(xCoordinate, 350, xCoordinate + 120, 385)
@@ -247,6 +266,7 @@ class FifaMobile(
 
         if (pixel(839, 21) == -657931) {
             log("main screen")
+            drag(500, 500, 100, 500, 3000)
             if (script == FifaGameScript.Market) click(484, 456)
             else click(800, 340)
             delay(3_000)
@@ -272,10 +292,26 @@ class FifaMobile(
             makeScreenshot()
         }
 
-        if (pixel(734, 445) == -15633418
-            && pixel(433, 452) != -12955515
+        if (pixel(734, 445) == -15501841
+            && pixel(433, 452) != -14401919
         ) {
             log("next")
+            click(734, 445)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(734, 445) == -15237386) {
+            log("next2")
+            click(734, 445)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(751, 449) == -15303436) {
+            log("show all")
             click(734, 445)
             delay(3_000)
             exitCycle = true
@@ -347,8 +383,28 @@ class FifaMobile(
 
 
         if (pixel(234, 302) == -12823411 && pixel(722, 302) == -12823411) {
-            log("big button in senter")
+            log("big button in center")
             click(481, 309)
+            delay(1_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(196, 425) == -1311659 && pixel(760, 425) == -1311659
+            && pixel(186, 425) == -1311659 && pixel(770, 425) == -1311659
+        ) {
+            log("big yellow button in center")
+            click(481, 440)
+            delay(1_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(198, 430) == -1705131 && pixel(759, 430) == -1705131
+            && pixel(188, 430) != -1705131 && pixel(769, 430) != -1705131
+        ) {
+            log("big yellow button in center2")
+            click(481, 440)
             delay(1_000)
             exitCycle = true
             makeScreenshot()

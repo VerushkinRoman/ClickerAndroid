@@ -1,17 +1,17 @@
 package com.posse.android.clicker.model
 
 import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class MyLog {
 
-    private val log: MutableStateFlow<String> = MutableStateFlow("")
+    private val log = Channel<String>()
 
-    fun get(): StateFlow<String> = log
+    fun get() = log.receiveAsFlow()
 
-    fun add(string: String) {
+    suspend fun add(string: String) {
         Log.d("Clicker", string)
-        log.value = string
+        log.send(string)
     }
 }
