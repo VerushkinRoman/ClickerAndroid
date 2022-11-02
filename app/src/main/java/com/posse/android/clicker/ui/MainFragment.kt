@@ -50,6 +50,7 @@ class MainFragment : Service() {
     private lateinit var backgroundView: BackgroundView
     private lateinit var coordinates: StateFlow<BackgroundView.Point>
     private val mainScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var logJob: Job? = null
 
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
@@ -76,7 +77,6 @@ class MainFragment : Service() {
         initBackground()
         initButtons()
         initAdapter()
-        initLog()
         initFloatingWindow()
         openLastError()
         initClicker()
@@ -93,9 +93,7 @@ class MainFragment : Service() {
         clicker = Clicker(msg, loginMsg, animator, log, screenshot) { isRunning ->
             val color = if (isRunning) android.R.color.holo_green_light
             else android.R.color.darker_gray
-            mainScope.launch {
-                binding.startButton.setBackgroundColor(binding.root.context.getColor(color))
-            }
+            binding.startButton.setBackgroundColor(binding.root.context.getColor(color))
         }
     }
 
@@ -175,22 +173,22 @@ class MainFragment : Service() {
         }
     }
 
-    private fun expandWindow() {
-        expandButton(binding.startButton, getText(R.string.start))
-        expandButton(binding.stopButton, getText(R.string.stop))
-        binding.logButton.visibility = View.VISIBLE
-        binding.editorButton.visibility = View.VISIBLE
-        binding.chooseLayout.visibility = View.VISIBLE
+    private fun expandWindow() = with(binding) {
+        expandButton(startButton, getText(R.string.start))
+        expandButton(stopButton, getText(R.string.stop))
+        logButton.visibility = View.VISIBLE
+        editorButton.visibility = View.VISIBLE
+        chooseLayout.visibility = View.VISIBLE
     }
 
-    private fun collapseWindow() {
-        collapseButton(binding.startButton, ">")
-        collapseButton(binding.stopButton, "O")
-        binding.logButton.visibility = View.GONE
-        binding.editorButton.visibility = View.GONE
-        binding.chooseLayout.visibility = View.GONE
-        binding.logRecyclerView.visibility = View.GONE
-        binding.editorLayout.visibility = View.GONE
+    private fun collapseWindow() = with(binding) {
+        collapseButton(startButton, ">")
+        collapseButton(stopButton, "O")
+        logButton.visibility = View.GONE
+        editorButton.visibility = View.GONE
+        chooseLayout.visibility = View.GONE
+        logRecyclerView.visibility = View.GONE
+        editorLayout.visibility = View.GONE
         changeBackgroundView()
     }
 
@@ -203,19 +201,23 @@ class MainFragment : Service() {
                 button.minimumHeight
             )
         }
-        button.minimumHeight = 0
-        button.minimumWidth = 0
-        button.minHeight = 0
-        button.minWidth = 0
-        button.text = text
+        button.apply {
+            minimumHeight = 0
+            minimumWidth = 0
+            minHeight = 0
+            minWidth = 0
+            this.text = text
+        }
     }
 
     private fun expandButton(button: MaterialButton, text: CharSequence) {
-        button.minimumWidth = defaultButton?.minimumWidth ?: 132
-        button.minimumHeight = defaultButton?.minimumHeight ?: 72
-        button.minWidth = defaultButton?.minWidth ?: 132
-        button.minHeight = defaultButton?.minHeight ?: 72
-        button.text = text
+        button.apply {
+            minimumWidth = defaultButton?.minimumWidth ?: 132
+            minimumHeight = defaultButton?.minimumHeight ?: 72
+            minWidth = defaultButton?.minWidth ?: 132
+            minHeight = defaultButton?.minHeight ?: 72
+            this.text = text
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -297,21 +299,24 @@ class MainFragment : Service() {
     private fun initStopButton() = binding.stopButton.setOnClickListener { clicker?.stop() }
 
     private fun initStartButton() = binding.startButton
-        .setOnClickListener { clicker?.start(script) }
+        .setOnClickListener {
+            clicker?.start(script)
+            initLog()
+        }
 
     private fun initCloseButton() = binding.closeButton.setOnClickListener { dismiss() }
 
-    private fun initEditorButton() {
+    private fun initEditorButton() = with(binding) {
         coordinates = backgroundView.getData()
-        binding.editorButton.setOnClickListener {
-            binding.editorLayout.isVisible = !binding.editorLayout.isVisible
-            binding.logRecyclerView.isVisible = false
+        editorButton.setOnClickListener {
+            editorLayout.isVisible = !editorLayout.isVisible
+            logRecyclerView.isVisible = false
             changeBackgroundView()
         }
     }
 
-    private fun changeBackgroundView() {
-        if (binding.editorLayout.isVisible) {
+    private fun changeBackgroundView() = with(binding) {
+        if (editorLayout.isVisible) {
             backgroundLayoutParams.apply {
                 flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -322,10 +327,10 @@ class MainFragment : Service() {
                     .collectLatest { point ->
                         val picture = screenshot.get() ?: return@collectLatest
                         mainScope.launch {
-                            binding.savedColor.text = picture[point.x, point.y].toString()
-                            binding.savedX.text = point.x.toString()
-                            binding.savedY.text = point.y.toString()
-                            binding.colorLabel.setBackgroundColor(picture[point.x, point.y])
+                            savedColor.text = picture[point.x, point.y].toString()
+                            savedX.text = point.x.toString()
+                            savedY.text = point.y.toString()
+                            colorLabel.setBackgroundColor(picture[point.x, point.y])
                         }
                     }
             }
@@ -344,24 +349,25 @@ class MainFragment : Service() {
         }
     }
 
-    private fun initLogButton() {
-        binding.logButton.setOnClickListener {
-            binding.logRecyclerView.isVisible = !binding.logRecyclerView.isVisible
-            binding.editorLayout.isVisible = false
+    private fun initLogButton() = with(binding) {
+        logButton.setOnClickListener {
+            logRecyclerView.isVisible = !logRecyclerView.isVisible
+            editorLayout.isVisible = false
             changeBackgroundView()
-            if (binding.logRecyclerView.isVisible) binding.logRecyclerView.post {
-                binding.logRecyclerView.scrollToPosition(adapter.itemCount - 1)
+            if (logRecyclerView.isVisible) logRecyclerView.post {
+                logRecyclerView.scrollToPosition(adapter.itemCount - 1)
             }
         }
     }
 
-    private fun initAdapter() {
-        binding.logRecyclerView.layoutManager = LinearLayoutManager(applicationContext)
-        binding.logRecyclerView.adapter = adapter
+    private fun initAdapter() = with(binding) {
+        logRecyclerView.layoutManager = LinearLayoutManager(applicationContext)
+        logRecyclerView.adapter = adapter
     }
 
     private fun initLog() {
-        mainScope.launch {
+        logJob?.cancel()
+        logJob = mainScope.launch {
             log.get().collect {
                 adapter.add(it)
                 binding.logRecyclerView.scrollToPosition(adapter.itemCount - 1)

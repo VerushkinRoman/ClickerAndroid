@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.posse.android.clicker"
         minSdk 24
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
     }
@@ -20,7 +20,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -47,21 +48,21 @@ android {
 dependencies {
 
     // UI
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.2'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha01"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha03'
 
     // Koin
-    implementation 'io.insert-koin:koin-core:3.2.0'
-    implementation 'io.insert-koin:koin-android:3.2.0'
-    implementation 'io.insert-koin:koin-android-compat:3.2.0'
+    implementation 'io.insert-koin:koin-core:3.2.2'
+    implementation 'io.insert-koin:koin-android:3.3.0'
+    implementation 'io.insert-koin:koin-android-compat:3.3.0'
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -69,10 +70,10 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
 
     // Time
-    implementation 'com.jakewharton.threetenabp:threetenabp:1.3.1'
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.4.2'
 
     // Text recognise
-    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.0'
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.2'
 
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.0"
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.7.20'
 }

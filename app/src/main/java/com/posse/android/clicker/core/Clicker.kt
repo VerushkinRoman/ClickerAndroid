@@ -78,15 +78,17 @@ class Clicker(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun sendTouch(x: Int, y: Int) {
-        withContext(Dispatchers.IO) {
-            outputStream.write("$EVENT 1 330 1\n")
-            outputStream.write("$EVENT 3 53 $x\n")
-            outputStream.write("$EVENT 3 54 $y\n")
-            outputStream.write("$EVENT 0 2 0\n")
-            outputStream.write("$EVENT 0 0 0\n")
-            outputStream.write("$EVENT 0 2 0\n")
-            outputStream.write("$EVENT 0 0 0\n")
-            outputStream.flush()
+        coroutineScope {
+            launch {
+                outputStream.write("$EVENT 1 330 1\n")
+                outputStream.write("$EVENT 3 53 $x\n")
+                outputStream.write("$EVENT 3 54 $y\n")
+                outputStream.write("$EVENT 0 2 0\n")
+                outputStream.write("$EVENT 0 0 0\n")
+                outputStream.write("$EVENT 0 2 0\n")
+                outputStream.write("$EVENT 0 0 0\n")
+                outputStream.flush()
+            }
         }
     }
 
@@ -94,7 +96,6 @@ class Clicker(
 
     fun backButton() = sendCommand("input keyevent KEYCODE_BACK\n")
 
-    @Synchronized
     private fun sendCommand(command: String) {
         try {
             outputStream.write(command)
@@ -111,20 +112,23 @@ class Clicker(
         endY: Int,
         duration: Long
     ) {
-        sendCommand("input swipe $startX $startY $endX $endY $duration\n")
-        delay(400)
-        animator?.animateDrag(startX, startY, endX, endY, duration)
-        delay(duration + ANIMATION_DURATION * 2)
+        coroutineScope {
+            launch {
+                sendCommand("input swipe $startX $startY $endX $endY $duration\n")
+                delay(400)
+                animator?.animateDrag(startX, startY, endX, endY, duration)
+            }
+        }
     }
 
     fun startTelegram(msg: String, delay: Int, repeat: Boolean) {
-        telegram.msg = msg
-        telegram.delay = delay
-        telegram.repeat = repeat
+        telegram.apply {
+            this.msg = msg
+            this.delay = delay
+            this.repeat = repeat
+        }
         if (telegramJob == null) {
-            telegramJob = coroutineScope.launch {
-                telegram.run()
-            }
+            telegramJob = coroutineScope.launch { telegram.run() }
         } else telegram.countdown = 0
     }
 
@@ -137,9 +141,9 @@ class Clicker(
         return when (screenShotType) {
             ScreenShotType.Full -> screenshot.get()
             ScreenShotType.WithHole -> screenshot.getWithHole(
-                x.toFloat(),
-                y.toFloat(),
-                Animator.SIZE * Animator.MAX_SCALE
+                cx = x.toFloat(),
+                cy = y.toFloat(),
+                radius = Animator.SIZE * Animator.MAX_SCALE
             )
         }
     }
@@ -151,9 +155,9 @@ class Clicker(
         startY: Int,
         endX: Int,
         endY: Int
-    ): Int {
+    ): Int = withContext(Dispatchers.Default) {
         var result = -1
-        val bitmap = getScreen(ScreenShotType.Full) ?: return result
+        val bitmap = getScreen(ScreenShotType.Full) ?: return@withContext result
         val cropImage = Bitmap.createBitmap(
             bitmap,
             startX,
@@ -167,11 +171,17 @@ class Clicker(
             .addOnSuccessListener { visionText ->
                 putLog("recognized text: ${visionText.text}")
                 try {
-                    val string = visionText.textBlocks.first().lines.first().text.replace(
-                        "\\s".toRegex(),
-                        ""
-                    )
-                    result = string.toInt()
+                    result = visionText
+                        .textBlocks
+                        .first()
+                        .lines
+                        .first()
+                        .text
+                        .replace(
+                            regex = "\\s".toRegex(),
+                            replacement = ""
+                        )
+                        .toInt()
                 } catch (e: Exception) {
                     e.message?.let { putLog(it) }
                 }
@@ -181,10 +191,12 @@ class Clicker(
                 putLog(e.message.toString())
                 readyResult = true
             }
+
         while (!readyResult) {
             delay(100)
         }
-        return result
+
+        result
     }
 
     fun getPixelCount(

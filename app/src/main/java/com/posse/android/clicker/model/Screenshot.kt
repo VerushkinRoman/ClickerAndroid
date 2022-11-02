@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter
 
 class Screenshot(private val outputStream: OutputStreamWriter, private val process: Process) {
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     fun get(): Bitmap? {
         return runBlocking(Dispatchers.Default) {
             try {
@@ -20,7 +21,7 @@ class Screenshot(private val outputStream: OutputStreamWriter, private val proce
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-            return@runBlocking null
+            null
         }
     }
 

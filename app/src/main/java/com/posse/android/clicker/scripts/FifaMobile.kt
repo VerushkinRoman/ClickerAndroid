@@ -373,6 +373,22 @@ class FifaMobile(
             makeScreenshot()
         }
 
+        if (pixel(380, 108) == -767707) {
+            log("friends vs attack")
+            click(23, 23)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
+        if (pixel(118, 129) == -7660225) {
+            log("shop")
+            click(23, 23)
+            delay(3_000)
+            exitCycle = true
+            makeScreenshot()
+        }
+
         if (pixel(710, 165) == -657931) {
             log("bet taken")
             click(710, 165)

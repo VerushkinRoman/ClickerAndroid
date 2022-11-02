@@ -5,13 +5,13 @@ import android.content.Context
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class BackgroundView(context: Context) : FrameLayout(context) {
 
     private val data: MutableStateFlow<Point> = MutableStateFlow(Point(0, 0))
 
-    fun getData(): StateFlow<Point> = data
+    fun getData() = data.asStateFlow()
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {

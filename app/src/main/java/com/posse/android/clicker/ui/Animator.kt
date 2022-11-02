@@ -1,7 +1,6 @@
 package com.posse.android.clicker.ui
 
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
@@ -16,48 +15,35 @@ class Animator(private val rootView: View) {
 
     private val windows = arrayListOf<PopupWindow>()
 
-    private var isInterrupted = false
-
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    private fun getCircle(): Drawable {
-        val drawable = GradientDrawable()
-        drawable.shape = GradientDrawable.OVAL
-        drawable.setSize(SIZE, SIZE)
-        drawable.setColor(Color.WHITE)
-        return drawable
+    private fun getCircle() = GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setSize(SIZE, SIZE)
+        setColor(Color.WHITE)
     }
 
-    private fun getImage(): ImageView {
-        val circle = getCircle()
-        val image = ImageView(rootView.context)
-        image.background = null
-        image.alpha = 0f
-        image.scaleType = ImageView.ScaleType.CENTER_INSIDE
-        image.setImageDrawable(circle)
-        image.scaleX = MIN_SCALE
-        image.scaleY = image.scaleX
-        return image
+    private fun getImage() = ImageView(rootView.context).apply {
+        background = null
+        alpha = 0f
+        scaleType = ImageView.ScaleType.CENTER_INSIDE
+        setImageDrawable(getCircle())
+        scaleX = MIN_SCALE
+        scaleY = scaleX
     }
 
-    private fun getPopupWindow(): PopupWindow {
-        var popup: PopupWindow? = null
-        for (window in windows) {
-            if (!window.isShowing) popup = window
-        }
-        if (popup == null) {
-            val imageView = getImage()
-            popup = PopupWindow()
-            popup.height = (SIZE * MAX_SCALE).toInt()
-            popup.width = popup.height
-            popup.contentView = imageView
-            popup.isClippingEnabled = false
-            popup.isTouchable = false
-            windows.add(popup)
-        }
-        popup.update()
-        return popup
-    }
+    private fun getPopupWindow() = (
+            windows.find { !it.isShowing }
+                ?: PopupWindow().apply {
+                    height = (SIZE * MAX_SCALE).toInt()
+                    width = height
+                    contentView = getImage()
+                    isClippingEnabled = false
+                    isTouchable = false
+                }
+                    .also { windows.add(it) }
+            )
+        .apply { update() }
 
     fun animateClick(x: Int, y: Int) {
         scope.launch {
@@ -68,7 +54,6 @@ class Animator(private val rootView: View) {
     }
 
     fun stop() {
-        isInterrupted = true
         scope.coroutineContext.cancelChildren()
         scope.launch {
             windows.forEach {
@@ -125,7 +110,6 @@ class Animator(private val rootView: View) {
         duration: Long
     ) {
         scope.launch {
-            isInterrupted = false
             animateFadeIn(startX, startY) { view, popup ->
                 scope.launch {
                     animateMotion(duration, popup, endX, startX, endY, startY)
@@ -156,7 +140,6 @@ class Animator(private val rootView: View) {
                 -1
             )
             delay(interval.toLong())
-            if (isInterrupted) break
         }
     }
 
